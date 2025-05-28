@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>图片边框裁剪工具</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1><i class="ri-crop-2-line"></i>图片边框自动裁剪</h1>
+      <p>
+        上传图片，工具将自动检测并移除四周的纯色（黑色/白色）边框，让您的图片更加美观。
+      </p>
+
+      <div class="file-upload-container">
+        <label for="imageUpload" class="file-upload-label">
+          <i class="ri-image-add-line"></i> 选择图片文件
+        </label>
+        <input type="file" id="imageUpload" accept="image/*" />
+      </div>
+
+      <div class="options">
+        <div class="option-group">
+          <label for="borderColor">边框颜色预设:</label>
+          <select id="borderColor">
+            <option value="auto">自动检测 (优先白,后黑)</option>
+            <option value="white">白色 (#FFFFFF)</option>
+            <option value="black">黑色 (#000000)</option>
+          </select>
+        </div>
+        <div class="option-group">
+          <label for="tolerance">容差 (0-255):</label>
+          <input type="number" id="tolerance" value="10" min="0" max="255" />
+        </div>
+        <div class="option-group">
+          <label>裁剪模式:</label>
+          <input
+            type="radio"
+            id="cropModeAuto"
+            name="cropMode"
+            value="auto"
+            checked
+          />
+          <label for="cropModeAuto">自动边框裁剪</label>
+          <input
+            type="radio"
+            id="cropModeManualAuto"
+            name="cropMode"
+            value="manualAuto"
+          />
+          <label for="cropModeManualAuto">手动选框 + 自动边框裁剪</label>
+        </div>
+        <div class="option-group">
+          <input type="checkbox" id="removeExif" checked />
+          <label for="removeExif">移除图片元数据 (EXIF)</label>
+        </div>
+      </div>
+
+      <button id="cropButton"><i class="ri-crop-line"></i> 裁剪图片</button>
+
+      <div
+        id="statusMessage"
+        class="status-message"
+        style="display: none"
+      ></div>
+
+      <div id="aspectRatioSuggestion" style="display: none">
+        <p id="suggestionText"></p>
+        <div class="suggestion-buttons">
+          <button id="confirmRatioCrop">
+            <i class="ri-check-line"></i> 是的，按此比例裁剪
+          </button>
+          <button id="rejectRatioCrop">
+            <i class="ri-close-line"></i> 不，使用检测到的边框裁剪
+          </button>
+        </div>
+      </div>
+
+      <div class="image-previews">
+        <div class="preview-box">
+          <h2><i class="ri-image-line"></i> 原始图片</h2>
+          <div class="canvas-container">
+            <canvas id="originalCanvas"></canvas>
+            <!-- 在此处添加裁剪选择覆盖层 -->
+            <div
+              id="cropSelectionOverlay"
+              class="crop-selection-overlay"
+              style="display: none"
+            >
+              <div id="cropBox" class="crop-box">
+                <div class="crop-handle nw"></div>
+                <div class="crop-handle ne"></div>
+                <div class="crop-handle sw"></div>
+                <div class="crop-handle se"></div>
+                <div class="crop-handle n"></div>
+                <div class="crop-handle s"></div>
+                <div class="crop-handle w"></div>
+                <div class="crop-handle e"></div>
+              </div>
+            </div>
+          </div>
+          <div id="originalImageInfo" class="image-info"></div>
+        </div>
+        <div class="preview-box">
+          <h2><i class="ri-image-edit-line"></i> 裁剪后图片</h2>
+          <div class="canvas-container">
+            <canvas id="croppedCanvas"></canvas>
+          </div>
+          <a id="downloadLink" style="display: none"
+            ><i class="ri-download-line"></i> 下载裁剪后的图片</a
+          >
+          <div id="croppedImageInfo" class="image-info"></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
