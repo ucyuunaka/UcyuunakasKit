@@ -11,6 +11,7 @@ import sys
 import argparse
 from pathlib import Path
 import glob
+import configparser
 
 class Photo2PDF:
     """图像转PDF转换器"""
@@ -22,6 +23,65 @@ class Photo2PDF:
         self.processed_count = 0
         self.failed_count = 0
         self.failed_files = []
+        
+        # 加载配置文件
+        self.config = self._load_config()
+        
+    def _load_config(self):
+        """加载配置文件"""
+        config = configparser.ConfigParser()
+        config_path = Path(__file__).parent / 'config.ini'
+        
+        # 设置默认值
+        defaults = {
+            'quality': 95,
+            'optimize': True,
+            'background_color': (255, 255, 255),
+            'max_image_size': 10000,
+            'default_output_dir': 'pdf',
+            'default_merge_filename': 'merged_images.pdf',
+            'overwrite_existing': True
+        }
+        
+        if config_path.exists():
+            try:
+                config.read(config_path, encoding='utf-8')
+                
+                # 解析配置值
+                parsed_config = {}
+                
+                # 图像处理设置
+                if config.has_section('图像处理'):
+                    parsed_config['quality'] = config.getint('图像处理', 'quality', fallback=defaults['quality'])
+                    parsed_config['optimize'] = config.getboolean('图像处理', 'optimize', fallback=defaults['optimize'])
+                    
+                    # 解析背景颜色
+                    bg_color_str = config.get('图像处理', 'background_color', fallback='255, 255, 255')
+                    try:
+                        parsed_config['background_color'] = tuple(map(int, bg_color_str.split(',')))
+                    except:
+                        parsed_config['background_color'] = defaults['background_color']
+                    
+                    parsed_config['max_image_size'] = config.getint('图像处理', 'max_image_size', fallback=defaults['max_image_size'])
+                else:
+                    parsed_config.update({k: v for k, v in defaults.items() if k in ['quality', 'optimize', 'background_color', 'max_image_size']})
+                
+                # 文件处理设置
+                if config.has_section('文件处理'):
+                    parsed_config['default_output_dir'] = config.get('文件处理', 'default_output_dir', fallback=defaults['default_output_dir'])
+                    parsed_config['default_merge_filename'] = config.get('文件处理', 'default_merge_filename', fallback=defaults['default_merge_filename'])
+                    parsed_config['overwrite_existing'] = config.getboolean('文件处理', 'overwrite_existing', fallback=defaults['overwrite_existing'])
+                else:
+                    parsed_config.update({k: v for k, v in defaults.items() if k in ['default_output_dir', 'default_merge_filename', 'overwrite_existing']})
+                
+                return parsed_config
+                
+            except Exception as e:
+                print(f"警告: 读取配置文件失败，使用默认设置: {e}")
+                return defaults
+        else:
+            print("警告: 配置文件不存在，使用默认设置")
+            return defaults
     
     def image_to_pdf(self, image_path, pdf_path):
         """
@@ -37,11 +97,10 @@ class Photo2PDF:
         try:
             # 打开图像文件
             image = Image.open(image_path)
-            
-            # 处理图像模式
+              # 处理图像模式
             if image.mode == 'RGBA':
-                # 创建白色背景处理透明图像
-                background = Image.new('RGB', image.size, (255, 255, 255))
+                # 使用配置的背景颜色处理透明图像
+                background = Image.new('RGB', image.size, self.config['background_color'])
                 background.paste(image, mask=image.split()[-1])  # 使用alpha通道作为遮罩
                 image = background
             elif image.mode == 'P':
@@ -51,8 +110,8 @@ class Photo2PDF:
                 # 其他模式转为RGB
                 image = image.convert('RGB')
             
-            # 保存为PDF
-            image.save(pdf_path, "PDF", quality=95, optimize=True)
+            # 保存为PDF，使用配置的质量和优化设置
+            image.save(pdf_path, "PDF", quality=self.config['quality'], optimize=self.config['optimize'])
             print(f"✓ 成功转换: {os.path.basename(image_path)} -> {os.path.basename(pdf_path)}")
             self.processed_count += 1
             return True
@@ -155,10 +214,9 @@ class Photo2PDF:
                     continue
                 
                 image = Image.open(image_path)
-                
-                # 处理图像模式
+                  # 处理图像模式
                 if image.mode == 'RGBA':
-                    background = Image.new('RGB', image.size, (255, 255, 255))
+                    background = Image.new('RGB', image.size, self.config['background_color'])
                     background.paste(image, mask=image.split()[-1])
                     image = background
                 elif image.mode != 'RGB':
@@ -169,9 +227,9 @@ class Photo2PDF:
             if not images:
                 print("错误: 没有有效的图像文件")
                 return False
-            
-            # 保存合并的PDF
-            images[0].save(pdf_path, "PDF", save_all=True, append_images=images[1:], quality=95, optimize=True)
+              # 保存合并的PDF，使用配置的质量和优化设置
+            images[0].save(pdf_path, "PDF", save_all=True, append_images=images[1:], 
+                          quality=self.config['quality'], optimize=self.config['optimize'])
             print(f"✓ 成功合并 {len(images)} 个图像到: {os.path.basename(pdf_path)}")
             return True
             
