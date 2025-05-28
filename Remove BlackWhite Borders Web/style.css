@@ -1,0 +1,481 @@
+body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+    margin: 0;
+    padding: 15px 10px;
+    /* 调整的内边距 */
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    line-height: 1.6;
+}
+
+.container {
+    background-color: #fff;
+    padding: 25px 20px;
+    /* 调整的内边距 */
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 1000px;
+    /* 调整的最大宽度 */
+    box-sizing: border-box;
+    /* 在宽度中包含内边距 */
+}
+
+h1 {
+    text-align: center;
+    color: #2563eb;
+    margin-bottom: 14px;
+    /* 调整的外边距 */
+    font-weight: 700;
+    font-size: 1.7em;
+    /* 调整的字体大小 */
+}
+
+h1 i,
+h2 i,
+button i,
+a i,
+.file-upload-label i {
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.ri-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+p {
+    text-align: center;
+    margin-bottom: 18px;
+    /* 调整的外边距 */
+    font-size: 0.95em;
+    /* 调整的字体大小 */
+    color: #4b5563;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+input[type="file"] {
+    display: none;
+}
+
+.file-upload-container {
+    margin: 18px auto;
+    /* 调整的外边距 */
+    text-align: center;
+}
+
+.file-upload-label {
+    display: inline-block;
+    padding: 12px 20px;
+    /* 调整的内边距 */
+    background-color: #f3f4f6;
+    color: #4b5563;
+    border-radius: 8px;
+    border: 2px dashed #d1d5db;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.file-upload-label:hover {
+    background-color: #e5e7eb;
+    border-color: #9ca3af;
+}
+
+.options {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    /* 调整的间距 */
+    margin-bottom: 20px;
+    /* 调整的外边距 */
+    flex-wrap: wrap;
+    background-color: #f9fafb;
+    padding: 12px;
+    /* 调整的内边距 */
+    border-radius: 8px;
+}
+
+.option-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.options label {
+    font-size: 0.95em;
+    /* 调整的字体大小 */
+    color: #4b5563;
+    margin-right: 0;
+    font-weight: 500;
+}
+
+.options input[type="number"],
+.options select {
+    padding: 8px 12px;
+    /* 调整的内边距 */
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background-color: #fff;
+    color: #1f2937;
+    font-size: 0.95em;
+    /* 调整的字体大小 */
+    transition: all 0.2s ease;
+    min-width: 90px;
+    /* 调整的最小宽度 */
+}
+
+.options input[type="number"]:focus,
+.options select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+    outline: none;
+}
+
+button {
+    display: block;
+    background-color: #2563eb;
+    color: #fff;
+    padding: 10px 24px;
+    /* 调整的内边距 */
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600;
+    margin: 18px auto;
+    /* 调整的外边距 */
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+}
+
+button:disabled {
+    background-color: #e5e7eb;
+    color: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+button:hover:not(:disabled) {
+    background-color: #1d4ed8;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 10px rgba(37, 99, 235, 0.3);
+}
+
+.image-previews {
+    display: flex;
+    /* 使用弹性盒布局 */
+    justify-content: center;
+    /* 水平居中 */
+    gap: 20px;
+    /* 预览框之间的间距 */
+    margin-top: 20px;
+    /* 调整的外边距 */
+    flex-wrap: wrap;
+    /* 在较小的屏幕上允许换行 */
+}
+
+.preview-box {
+    text-align: center;
+    width: calc(50% - 10px);
+    /* 设置两列的宽度，带有间距 */
+    min-width: 300px;
+    /* 调整的最小宽度 */
+    margin-bottom: 0;
+    /* 移除底部外边距 */
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
+    /* 在宽度中包含内边距和边框 */
+}
+
+.preview-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.preview-box h2 {
+    font-size: 1.1em;
+    /* 调整的字体大小 */
+    margin-bottom: 12px;
+    /* 调整的外边距 */
+    padding-bottom: 8px;
+    /* 调整的内边距 */
+    color: #2563eb;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(37, 99, 235, 0.2);
+    width: 100%;
+}
+
+canvas {
+    display: block;
+    max-width: 100%;
+    max-height: 500px; /* 画布本身的最大高度 */
+    object-fit: contain;
+    border-radius: 4px; /* 画布的略微圆角 */
+    border: 1px solid #e5e7eb;
+    background-color: #f9fafb;
+    border-radius: 6px;
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.05);
+    margin: 0 auto;
+}
+
+.canvas-container {
+    position: relative; /* 确保把手相对于画布定位 */
+    margin-bottom: 15px;
+    width: 100%;
+    min-height: 200px; /* 最小高度以防止空容器坍塌 */
+    transition: height 0.3s ease; /* 高度变化时平滑过渡 */
+    background-color: #f9fafb;
+    border-radius: 6px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.canvas-container:empty::before {
+    content: '等待图片加载...';
+    color: #9ca3af;
+    font-style: italic;
+}
+
+#downloadLink {
+    display: inline-block;
+    padding: 10px 16px;
+    background-color: #10b981;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 8px;
+    margin-top: 10px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+}
+
+#downloadLink:hover {
+    background-color: #059669;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 10px rgba(16, 185, 129, 0.3);
+}
+
+/* 裁剪选择覆盖层 */
+.crop-selection-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.crop-box {
+    position: absolute;
+    border: 2px dashed #2563eb;
+    background-color: rgba(37, 99, 235, 0.1);
+    pointer-events: auto;
+    cursor: move;
+}
+
+.crop-handle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: #fff;
+    border: 2px solid #2563eb;
+    border-radius: 50%;
+    pointer-events: auto;
+}
+
+.crop-handle.nw { top: -5px; left: -5px; cursor: nwse-resize; }
+.crop-handle.ne { top: -5px; right: -5px; cursor: nesw-resize; }
+.crop-handle.sw { bottom: -5px; left: -5px; cursor: nesw-resize; }
+.crop-handle.se { bottom: -5px; right: -5px; cursor: nwse-resize; }
+.crop-handle.n { top: -5px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+.crop-handle.s { bottom: -5px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+.crop-handle.w { top: 50%; left: -5px; transform: translateY(-50%); cursor: ew-resize; }
+.crop-handle.e { top: 50%; right: -5px; transform: translateY(-50%); cursor: ew-resize; }
+
+.image-info {
+    margin-top: 10px;
+    font-size: 0.85em;
+    color: #6b7280;
+    font-family: monospace;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 宽高比建议 */
+#aspectRatioSuggestion {
+    background-color: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 15px auto;
+    max-width: 500px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 149, 255, 0.1);
+}
+
+#suggestionText {
+    margin-bottom: 15px;
+    color: #0369a1;
+    font-size: 0.95em;
+}
+
+.suggestion-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.suggestion-buttons button {
+    margin: 5px;
+    font-size: 0.9em;
+    padding: 8px 16px;
+}
+
+#confirmRatioCrop {
+    background-color: #10b981;
+    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+}
+
+#confirmRatioCrop:hover:not(:disabled) {
+    background-color: #059669;
+    box-shadow: 0 6px 10px rgba(16, 185, 129, 0.3);
+}
+
+#rejectRatioCrop {
+    background-color: #6b7280;
+    box-shadow: 0 4px 6px rgba(107, 114, 128, 0.2);
+}
+
+#rejectRatioCrop:hover:not(:disabled) {
+    background-color: #4b5563;
+    box-shadow: 0 6px 10px rgba(107, 114, 128, 0.3);
+}
+
+.status-message {
+    text-align: center;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin: 10px auto;
+    max-width: 80%;
+    font-weight: 500;
+}
+
+.status-message.error {
+    background-color: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+
+.status-message.info {
+    background-color: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 10px 5px;
+    }
+
+    .container {
+        padding: 15px 10px;
+    }
+
+    h1 {
+        font-size: 1.5em;
+    }
+
+    p {
+        font-size: 0.9em;
+    }
+
+    .image-previews {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .preview-box {
+        width: 100%;
+        min-width: unset;
+        max-width: 100%;
+        margin-bottom: 20px;
+    }
+
+    .options {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .option-group {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .option-group label {
+        margin-bottom: 5px;
+    }
+
+    .options input[type="number"],
+    .options select {
+        width: 100%;
+        min-width: unset;
+    }
+
+    .suggestion-buttons {
+        flex-direction: column;
+    }
+
+    .file-upload-label {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    canvas {
+        max-height: 300px;
+    }
+
+    button {
+        width: 100%;
+    }
+
+    #aspectRatioSuggestion {
+        max-width: 100%;
+    }
+
+    #suggestionText {
+        font-size: 0.9em;
+    }
+}
