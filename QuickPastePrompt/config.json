@@ -1,0 +1,40 @@
+{
+  "enable_feedback": true,
+  "categories": [
+    {
+      "category_name": "内容创作",
+      "prompts": [
+        {
+          "title": "生成博客标题",
+          "content": "请为关于 [主题] 的博客文章生成5个吸引人的标题。"
+        },
+        {
+          "title": "社交媒体帖子",
+          "content": "为 [平台] 撰写一篇关于 [事件] 的宣传帖子，风格要求 [风格]。"
+        }
+      ]
+    },
+    {
+      "category_name": "编程助手",
+      "prompts": [
+        {
+          "title": "Python 代码解释",
+          "content": "请逐行解释以下Python代码的功能和逻辑：\n\n```python\n[在此处粘贴代码]\n```"
+        },
+        {
+          "title": "SQL 查询优化",
+          "content": "请分析并优化以下SQL查询的性能：\n\n```sql\n[在此处粘贴SQL]\n```"
+        }
+      ]
+    },
+    {
+      "category_name": "日常邮件",
+      "prompts": [
+        {
+          "title": "会议邀请",
+          "content": "你好，\n\n我希望邀请你参加一个关于 [主题] 的会议。\n\n时间：[日期和时间]\n地点：[地点]\n\n期待你的参与。\n\n谢谢！"
+        }
+      ]
+    }
+  ]
+} 
