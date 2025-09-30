@@ -42,5 +42,9 @@ Thumbs.db
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Project specific files
+/Photo2Pdf/.vscode
+terminal_out/dashboard_simulator.py
 prompt_templates/1.md
 prompt_templates/用.md
