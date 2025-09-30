@@ -3,8 +3,9 @@ from tkinter import filedialog, messagebox, ttk
 import os
 import time
 
-# 全局变量，用于存储所有选定的代码文件路径
-selected_code_paths_global = []
+# 全局变量，用于存储所有选定的代码文件路径和标记状态
+# 每个元素是一个字典: {"path": 文件路径, "marked": 是否标记}
+selected_code_files_global = []
 # 支持的编程语言扩展名
 SUPPORTED_EXTENSIONS = {
     'Python': ['.py', '.pyw'],
@@ -75,7 +76,7 @@ def add_code_files():
     """
     通过 GUI 界面选择代码文件，并将其路径添加到全局列表和列表框中。
     """
-    global selected_code_paths_global
+    global selected_code_files_global
 
     # 构建文件类型过滤器
     filetypes = []
@@ -97,15 +98,19 @@ def add_code_files():
 
     added_count = 0
     for code_file_path in code_files_paths:
-        if code_file_path not in selected_code_paths_global:
-            selected_code_paths_global.append(code_file_path)
+        # 检查文件是否已经存在
+        existing_file = next((item for item in selected_code_files_global if item["path"] == code_file_path), None)
+        if not existing_file:
+            # 添加新文件，默认标记为True
+            selected_code_files_global.append({"path": code_file_path, "marked": True})
             # 在列表中显示文件名和语言类型
             filename = os.path.basename(code_file_path)
             language = get_language_from_extension(code_file_path)
-            selected_files_listbox.insert(tk.END, f"{filename} ({language})")
+            selected_files_listbox.insert(tk.END, f"✓ {filename} ({language})")
             added_count += 1
 
-    status_label.config(text=f"已添加 {added_count} 个文件。当前共 {len(selected_code_paths_global)} 个文件待转换。")
+    # 刷新显示
+    refresh_all_list_items()
     root.update_idletasks()
 
 def get_all_supported_files_in_folder(folder_path):
@@ -130,7 +135,7 @@ def add_folder():
     """
     通过 GUI 界面选择文件夹，并递归添加其中所有支持的代码文件。
     """
-    global selected_code_paths_global
+    global selected_code_files_global
 
     folder_path = filedialog.askdirectory(title="选择要添加的文件夹")
     if not folder_path:
@@ -145,21 +150,25 @@ def add_folder():
 
     added_count = 0
     for file_path in supported_files:
-        if file_path not in selected_code_paths_global:
-            selected_code_paths_global.append(file_path)
+        # 检查文件是否已经存在
+        existing_file = next((item for item in selected_code_files_global if item["path"] == file_path), None)
+        if not existing_file:
+            # 添加新文件，默认标记为True
+            selected_code_files_global.append({"path": file_path, "marked": True})
             # 在列表中显示文件名和语言类型
             filename = os.path.basename(file_path)
             language = get_language_from_extension(file_path)
             # 显示相对路径以便更好地识别文件位置
             try:
                 relative_path = os.path.relpath(file_path, folder_path)
-                display_text = f"{relative_path} ({language})"
+                display_text = f"✓ {relative_path} ({language})"
             except ValueError:
-                display_text = f"{filename} ({language})"
+                display_text = f"✓ {filename} ({language})"
             selected_files_listbox.insert(tk.END, display_text)
             added_count += 1
 
-    status_label.config(text=f"已从文件夹 '{os.path.basename(folder_path)}' 添加 {added_count} 个文件。当前共 {len(selected_code_paths_global)} 个文件待转换。")
+    # 刷新显示
+    refresh_all_list_items()
     root.update_idletasks()
 
 def format_file_content(file_path, template_name):
@@ -207,12 +216,19 @@ def format_file_content(file_path, template_name):
 
 def preview_conversion():
     """
-    预览转换后的 Markdown 内容。
+    预览转换后的 Markdown 内容。只预览标记的文件。
     """
-    global selected_code_paths_global
+    global selected_code_files_global
 
-    if not selected_code_paths_global:
+    # 获取标记的文件
+    marked_files = [item for item in selected_code_files_global if item["marked"]]
+
+    if not selected_code_files_global:
         messagebox.showwarning("警告", "请先添加代码文件！")
+        return
+
+    if not marked_files:
+        messagebox.showwarning("警告", "没有标记的文件需要预览！请标记要预览的文件。")
         return
 
     # 获取选择的模板
@@ -221,7 +237,8 @@ def preview_conversion():
     # 创建预览内容
     preview_content = []
 
-    for code_file_path in selected_code_paths_global:
+    for file_item in marked_files:
+        code_file_path = file_item["path"]
         formatted_content = format_file_content(code_file_path, template_name)
         preview_content.append(formatted_content)
 
@@ -254,19 +271,116 @@ def clear_selected_files():
     """
     清空已选择的代码文件列表和列表框。
     """
-    global selected_code_paths_global
-    selected_code_paths_global.clear()
+    global selected_code_files_global
+    selected_code_files_global.clear()
     selected_files_listbox.delete(0, tk.END)
     status_label.config(text="已清空文件列表。")
+
+def toggle_file_mark(event):
+    """
+    切换选中文件的标记状态。
+    """
+    global selected_code_files_global
+
+    # 获取点击的项目索引
+    selection = selected_files_listbox.curselection()
+    if not selection:
+        return
+
+    index = selection[0]
+
+    if index < len(selected_code_files_global):
+        # 切换标记状态
+        current_marked = selected_code_files_global[index]["marked"]
+        selected_code_files_global[index]["marked"] = not current_marked
+
+        # 更新显示
+        update_list_item_display(index)
+
+        # 更新状态标签
+        marked_count = sum(1 for item in selected_code_files_global if item["marked"])
+        total_count = len(selected_code_files_global)
+        status_label.config(text=f"已标记 {marked_count}/{total_count} 个文件")
+
+def update_list_item_display(index):
+    """
+    更新指定索引的列表项显示。
+    """
+    global selected_code_files_global
+
+    if index < len(selected_code_files_global):
+        file_item = selected_code_files_global[index]
+        file_path = file_item["path"]
+        filename = os.path.basename(file_path)
+        language = get_language_from_extension(file_path)
+
+        # 获取相对路径（如果可能）
+        current_dir = os.getcwd()
+        try:
+            relative_path = os.path.relpath(file_path, current_dir)
+            display_name = relative_path
+        except ValueError:
+            display_name = filename
+
+        # 根据标记状态设置显示文本
+        if file_item["marked"]:
+            display_text = f"✓ {display_name} ({language})"
+        else:
+            display_text = f"✗ {display_name} ({language})"
+
+        # 更新列表项
+        selected_files_listbox.delete(index)
+        selected_files_listbox.insert(index, display_text)
+
+def refresh_all_list_items():
+    """
+    刷新所有列表项的显示。
+    """
+    global selected_code_files_global
+
+    selected_files_listbox.delete(0, tk.END)
+    for file_item in selected_code_files_global:
+        file_path = file_item["path"]
+        filename = os.path.basename(file_path)
+        language = get_language_from_extension(file_path)
+
+        # 获取相对路径（如果可能）
+        current_dir = os.getcwd()
+        try:
+            relative_path = os.path.relpath(file_path, current_dir)
+            display_name = relative_path
+        except ValueError:
+            display_name = filename
+
+        # 根据标记状态设置显示文本
+        if file_item["marked"]:
+            display_text = f"✓ {display_name} ({language})"
+        else:
+            display_text = f"✗ {display_name} ({language})"
+
+        selected_files_listbox.insert(tk.END, display_text)
+
+    # 更新状态标签
+    marked_count = sum(1 for item in selected_code_files_global if item["marked"])
+    total_count = len(selected_code_files_global)
+    status_label.config(text=f"已标记 {marked_count}/{total_count} 个文件")
 
 def perform_conversion():
     """
     使用全局列表中的代码文件进行转换，并将代码内容写入 Markdown 文件。
+    只处理已标记的文件。
     """
-    global selected_code_paths_global
+    global selected_code_files_global
 
-    if not selected_code_paths_global:
+    # 获取标记的文件
+    marked_files = [item for item in selected_code_files_global if item["marked"]]
+
+    if not selected_code_files_global:
         messagebox.showwarning("警告", "请先添加代码文件！")
+        return
+
+    if not marked_files:
+        messagebox.showwarning("警告", "没有标记的文件需要转换！请标记要转换的文件。")
         return
 
     # 获取选择的模板
@@ -286,11 +400,12 @@ def perform_conversion():
 
     # 初始化进度条
     progress_var.set(0)
-    total_files = len(selected_code_paths_global)
+    total_files = len(marked_files)
 
     try:
         with open(md_file_path, 'a', encoding='utf-8') as md_file:
-            for i, code_file_path in enumerate(selected_code_paths_global):
+            for i, file_item in enumerate(marked_files):
+                code_file_path = file_item["path"]
                 try:
                     # 更新状态标签，显示当前正在处理的文件
                     status_label.config(text=f"正在处理文件 ({i+1}/{total_files}): {os.path.basename(code_file_path)}")
@@ -333,8 +448,7 @@ def perform_conversion():
         status_label.config(text=f"转换完成！使用 {template_name} 模板")
         # 隐藏进度条
         progress_bar.pack_forget()
-        # 清空列表，为下一次转换做准备
-        clear_selected_files()
+        # 不清空列表，让用户可以继续使用
         root.after(3000, lambda: status_label.config(text="")) # 3秒后清空状态标签
 
     except IOError as e:
@@ -389,6 +503,9 @@ listbox_frame.pack(pady=10, padx=10, fill=tk.BOTH, expand=True)
 # 创建一个列表框来显示选定的文件
 selected_files_listbox = tk.Listbox(listbox_frame, height=5, width=60)
 selected_files_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+# 绑定点击事件来切换标记状态
+selected_files_listbox.bind('<<ListboxSelect>>', toggle_file_mark)
 
 # 为列表框添加滚动条
 scrollbar = tk.Scrollbar(listbox_frame, orient="vertical", command=selected_files_listbox.yview)
