@@ -108,6 +108,60 @@ def add_code_files():
     status_label.config(text=f"已添加 {added_count} 个文件。当前共 {len(selected_code_paths_global)} 个文件待转换。")
     root.update_idletasks()
 
+def get_all_supported_files_in_folder(folder_path):
+    """
+    递归获取文件夹及其子文件夹中所有支持的代码文件。
+    """
+    supported_files = []
+    all_extensions = []
+    for extensions in SUPPORTED_EXTENSIONS.values():
+        all_extensions.extend(extensions)
+
+    for root_dir, dirs, files in os.walk(folder_path):
+        for file in files:
+            file_path = os.path.join(root_dir, file)
+            _, ext = os.path.splitext(file_path.lower())
+            if ext in all_extensions:
+                supported_files.append(file_path)
+
+    return supported_files
+
+def add_folder():
+    """
+    通过 GUI 界面选择文件夹，并递归添加其中所有支持的代码文件。
+    """
+    global selected_code_paths_global
+
+    folder_path = filedialog.askdirectory(title="选择要添加的文件夹")
+    if not folder_path:
+        return # 用户取消选择
+
+    # 获取文件夹中的所有支持文件
+    supported_files = get_all_supported_files_in_folder(folder_path)
+
+    if not supported_files:
+        status_label.config(text=f"文件夹 '{os.path.basename(folder_path)}' 中未找到支持的代码文件。")
+        return
+
+    added_count = 0
+    for file_path in supported_files:
+        if file_path not in selected_code_paths_global:
+            selected_code_paths_global.append(file_path)
+            # 在列表中显示文件名和语言类型
+            filename = os.path.basename(file_path)
+            language = get_language_from_extension(file_path)
+            # 显示相对路径以便更好地识别文件位置
+            try:
+                relative_path = os.path.relpath(file_path, folder_path)
+                display_text = f"{relative_path} ({language})"
+            except ValueError:
+                display_text = f"{filename} ({language})"
+            selected_files_listbox.insert(tk.END, display_text)
+            added_count += 1
+
+    status_label.config(text=f"已从文件夹 '{os.path.basename(folder_path)}' 添加 {added_count} 个文件。当前共 {len(selected_code_paths_global)} 个文件待转换。")
+    root.update_idletasks()
+
 def format_file_content(file_path, template_name):
     """
     使用指定模板格式化文件内容。
@@ -305,7 +359,7 @@ title_label = tk.Label(main_frame, text="代码转 Markdown 工具", font=("Aria
 title_label.pack(pady=(0, 10))
 
 # 创建说明标签
-label = tk.Label(main_frame, text="请选择各种编程语言的代码文件，将它们转换为 Markdown 格式。支持 Python、JavaScript、Java、C/C++ 等多种语言。", wraplength=550, justify=tk.CENTER)
+label = tk.Label(main_frame, text="请选择各种编程语言的代码文件或文件夹，将它们转换为 Markdown 格式。支持 Python、JavaScript、Java、C/C++ 等多种语言。可以选择单个文件或整个文件夹（会递归扫描子文件夹）。", wraplength=550, justify=tk.CENTER)
 label.pack(pady=(0, 10))
 
 # 创建模板选择框架
@@ -348,6 +402,10 @@ button_frame.pack(pady=15, fill=tk.X)
 # 创建"添加代码文件"按钮
 add_files_button = tk.Button(button_frame, text="添加代码文件", command=add_code_files)
 add_files_button.pack(side=tk.LEFT, padx=5)
+
+# 创建"添加文件夹"按钮
+add_folder_button = tk.Button(button_frame, text="添加文件夹", command=add_folder)
+add_folder_button.pack(side=tk.LEFT, padx=5)
 
 # 创建"清空列表"按钮
 clear_button = tk.Button(button_frame, text="清空列表", command=clear_selected_files)
