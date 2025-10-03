@@ -22,6 +22,7 @@ class FileListPanel(MaterialCard):
         self.on_update_callback = None
         self._refresh_pending = False
         self._loading = False
+        self._loading_animation_id = None
         
         self._build_ui()
     
@@ -68,13 +69,28 @@ class FileListPanel(MaterialCard):
             font=("Segoe UI Emoji", 24)
         ).pack(side='left', padx=(MD.SPACING_SM, 0))
         
-        # 加载指示器
+        # 加载指示器容器
+        self.loading_container = ctk.CTkFrame(header, fg_color=MD.SURFACE_2, corner_radius=MD.RADIUS_MEDIUM)
+        
+        # 加载进度条（不确定模式）
+        self.loading_progress = ctk.CTkProgressBar(
+            self.loading_container,
+            height=6,
+            corner_radius=3,
+            fg_color=MD.SURFACE,
+            progress_color=MD.PRIMARY,
+            mode='indeterminate'
+        )
+        self.loading_progress.pack(padx=MD.SPACING_MD, pady=(MD.SPACING_SM, MD.SPACING_XS))
+        
+        # 加载文本
         self.loading_label = ctk.CTkLabel(
-            header,
-            text="⏳ 加载中...",
+            self.loading_container,
+            text="加载中...",
             font=MD.FONT_BODY,
             text_color=MD.PRIMARY
         )
+        self.loading_label.pack(padx=MD.SPACING_MD, pady=(0, MD.SPACING_SM))
         # 初始隐藏
     
     def _build_search_bar(self, parent):
@@ -113,56 +129,60 @@ class FileListPanel(MaterialCard):
         language_combo.pack(side='left')
     
     def _build_action_bar(self, parent):
-        """构建操作按钮栏"""
+        """构建操作按钮栏 - 使用Grid布局避免按钮消失"""
         action_bar = ctk.CTkFrame(parent, fg_color='transparent')
         action_bar.pack(fill='x', pady=(0, MD.SPACING_MD))
         
-        # 左侧按钮
+        # 配置网格列，使其可以自适应
+        action_bar.grid_columnconfigure(0, weight=1)  # 左侧按钮区域
+        action_bar.grid_columnconfigure(1, weight=0)  # 右侧按钮区域
+        
+        # 左侧按钮容器
         left_buttons = ctk.CTkFrame(action_bar, fg_color='transparent')
-        left_buttons.pack(side='left')
+        left_buttons.grid(row=0, column=0, sticky='w', padx=(0, MD.SPACING_SM))
         
         MaterialButton(
             left_buttons,
-            text="➕ 添加文件",
+            text="➕ 文件",
             command=self._add_files,
             style='filled',
-            width=120
+            width=100
         ).pack(side='left', padx=(0, MD.SPACING_SM))
         
         MaterialButton(
             left_buttons,
-            text="📁 添加文件夹",
+            text="📁 文件夹",
             command=self._add_folder,
             style='tonal',
-            width=120
+            width=100
         ).pack(side='left', padx=(0, MD.SPACING_SM))
         
         MaterialButton(
             left_buttons,
-            text="🔄 刷新",
+            text="🔄",
             command=self._refresh_files,
             style='outlined',
-            width=100
+            width=50
         ).pack(side='left', padx=(0, MD.SPACING_SM))
         
         MaterialButton(
             left_buttons,
-            text="🗑️ 清空",
+            text="🗑️",
             command=self._clear_files,
             style='error',
-            width=100
+            width=50
         ).pack(side='left')
         
-        # 右侧按钮
+        # 右侧按钮容器 - 使用Frame确保不会被挤出
         right_buttons = ctk.CTkFrame(action_bar, fg_color='transparent')
-        right_buttons.pack(side='right')
+        right_buttons.grid(row=0, column=1, sticky='e')
         
         MaterialButton(
             right_buttons,
             text="全选",
             command=lambda: self._mark_all(True),
             style='outlined',
-            width=80
+            width=60
         ).pack(side='left', padx=(0, MD.SPACING_SM))
         
         MaterialButton(
@@ -170,23 +190,23 @@ class FileListPanel(MaterialCard):
             text="全不选",
             command=lambda: self._mark_all(False),
             style='outlined',
-            width=80
+            width=70
         ).pack(side='left', padx=(0, MD.SPACING_SM))
         
         MaterialButton(
             right_buttons,
-            text="🔄 展开全部",
+            text="展开",
             command=self._expand_all,
             style='outlined',
-            width=100
+            width=60
         ).pack(side='left', padx=(0, MD.SPACING_SM))
         
         MaterialButton(
             right_buttons,
-            text="📁 折叠全部",
+            text="折叠",
             command=self._collapse_all,
             style='outlined',
-            width=100
+            width=60
         ).pack(side='left')
     
     def _build_file_list(self, parent):
@@ -544,13 +564,33 @@ class FileListPanel(MaterialCard):
         # 恢复选择模式
         self.file_tree.configure(selectmode='browse')
     
+    def _animate_loading(self):
+        """加载动画"""
+        if self._loading:
+            # 更新进度条动画
+            current = self.loading_progress.get()
+            if current >= 1.0:
+                self.loading_progress.set(0)
+            else:
+                self.loading_progress.set(current + 0.05)
+            
+            # 继续动画
+            self._loading_animation_id = self.after(50, self._animate_loading)
+    
     def _show_loading(self, show: bool):
         """显示/隐藏加载指示器"""
         self._loading = show
+        
         if show:
-            self.loading_label.pack(side='right', padx=MD.SPACING_MD)
+            self.loading_container.pack(side='right', padx=MD.SPACING_MD)
+            self.loading_progress.set(0)
+            self._animate_loading()
         else:
-            self.loading_label.pack_forget()
+            # 停止动画
+            if self._loading_animation_id:
+                self.after_cancel(self._loading_animation_id)
+                self._loading_animation_id = None
+            self.loading_container.pack_forget()
     
     def refresh(self):
         """刷新显示"""

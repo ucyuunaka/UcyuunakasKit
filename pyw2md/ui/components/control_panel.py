@@ -1,5 +1,5 @@
 """
-控制面板组件
+控制面板组件 - 使用可滚动容器避免按钮消失
 """
 
 import customtkinter as ctk
@@ -24,24 +24,30 @@ class ControlPanel(MaterialCard):
         self._build_ui()
     
     def _build_ui(self):
-        """构建UI"""
-        container = ctk.CTkFrame(self, fg_color='transparent')
-        container.pack(fill='both', expand=True, padx=MD.SPACING_MD, pady=MD.SPACING_MD)
+        """构建UI - 使用可滚动框架"""
+        # 创建可滚动容器以避免内容被遮挡
+        scrollable_container = ctk.CTkScrollableFrame(
+            self, 
+            fg_color='transparent',
+            scrollbar_button_color=MD.PRIMARY,
+            scrollbar_button_hover_color=MD.PRIMARY_CONTAINER
+        )
+        scrollable_container.pack(fill='both', expand=True, padx=MD.SPACING_MD, pady=MD.SPACING_MD)
         
         # 标题
-        self._build_header(container)
+        self._build_header(scrollable_container)
         
         # 模板选择
-        self._build_template_section(container)
+        self._build_template_section(scrollable_container)
         
         # 统计卡片
-        self._build_stats_section(container)
+        self._build_stats_section(scrollable_container)
         
-        # 操作按钮
-        self._build_actions(container)
+        # 操作按钮（放在可滚动区域内，确保始终可访问）
+        self._build_actions(scrollable_container)
         
-        # 进度显示
-        self._build_progress(container)
+        # 进度显示（固定在底部）
+        self._build_progress()
     
     def _build_header(self, parent):
         """构建标题"""
@@ -137,9 +143,9 @@ class ControlPanel(MaterialCard):
         self.stat_cards['languages'].grid(row=1, column=1, sticky='ew', padx=(MD.SPACING_XS, 0), pady=(MD.SPACING_XS, 0))
     
     def _build_actions(self, parent):
-        """构建操作按钮"""
+        """构建操作按钮 - 现在在滚动区域内"""
         actions = ctk.CTkFrame(parent, fg_color='transparent')
-        actions.pack(fill='x', pady=(MD.SPACING_LG, 0))
+        actions.pack(fill='x', pady=(MD.SPACING_LG, MD.SPACING_MD))
         
         MaterialButton(
             actions,
@@ -157,26 +163,34 @@ class ControlPanel(MaterialCard):
             height=56,
             font=MD.FONT_BODY_LARGE
         ).pack(fill='x')
+        
+        # 添加一些底部空间，确保按钮不会紧贴底部
+        ctk.CTkFrame(parent, fg_color='transparent', height=20).pack()
     
-    def _build_progress(self, parent):
-        """构建进度显示"""
-        self.progress_container = ctk.CTkFrame(parent, fg_color='transparent')
-        self.progress_container.pack(fill='x', pady=(MD.SPACING_MD, 0))
+    def _build_progress(self):
+        """构建进度显示 - 固定在窗口底部"""
+        # 在主卡片底部创建固定的进度容器
+        self.progress_container = ctk.CTkFrame(self, fg_color=MD.SURFACE_2, height=60)
+        
+        progress_content = ctk.CTkFrame(self.progress_container, fg_color='transparent')
+        progress_content.pack(fill='both', expand=True, padx=MD.SPACING_MD, pady=MD.SPACING_SM)
         
         self.progress_bar = ctk.CTkProgressBar(
-            self.progress_container,
+            progress_content,
             height=8,
             corner_radius=4,
-            fg_color=MD.SURFACE_2,
+            fg_color=MD.SURFACE,
             progress_color=MD.PRIMARY
         )
+        self.progress_bar.pack(fill='x', pady=(0, MD.SPACING_SM))
         
         self.progress_label = ctk.CTkLabel(
-            self.progress_container,
+            progress_content,
             text="",
             font=MD.FONT_LABEL,
             text_color=MD.ON_SURFACE_VARIANT
         )
+        self.progress_label.pack()
         
         # 初始隐藏
         self.hide_progress()
@@ -226,19 +240,22 @@ class ControlPanel(MaterialCard):
     
     def show_progress(self):
         """显示进度条"""
-        self.progress_bar.pack(fill='x', pady=(0, MD.SPACING_SM))
-        self.progress_label.pack()
+        self.progress_container.pack(side='bottom', fill='x', padx=MD.SPACING_MD, pady=(0, MD.SPACING_MD))
         self.progress_bar.set(0)
     
     def hide_progress(self):
         """隐藏进度条"""
-        self.progress_bar.pack_forget()
-        self.progress_label.pack_forget()
+        self.progress_container.pack_forget()
     
     def update_progress(self, current: int, total: int, filename: str = ""):
         """更新进度"""
         progress = current / total if total > 0 else 0
         self.progress_bar.set(progress)
+        
+        # 截断过长的文件名
+        if len(filename) > 30:
+            filename = "..." + filename[-27:]
+        
         self.progress_label.configure(
             text=f"正在处理: {filename} ({current}/{total})"
         )
