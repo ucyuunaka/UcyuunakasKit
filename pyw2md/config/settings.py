@@ -57,5 +57,7 @@ class Settings:
             "recent_files": [],
             "max_recent_files": 50,
             "auto_save_config": True,
-            "preview_max_files": 5
+            "preview_max_files": 5,
+            "auto_watch_files": True,  # 新增：自动监控文件变化
+            "watch_debounce_time": 1.0  # 新增：监控防抖时间（秒）
         }

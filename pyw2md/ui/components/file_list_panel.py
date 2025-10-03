@@ -17,14 +17,15 @@ class FileListPanel(MaterialCard):
     
     def __init__(self, master, file_handler: FileHandler, **kwargs):
         super().__init__(master, elevation=1, **kwargs)
-        
+
         self.file_handler = file_handler
         self.on_update_callback = None
+        self.on_file_add_callback = None  # 新增：文件添加回调
         self._refresh_pending = False
         self._loading = False
         self._loading_animation_id = None
         self._update_lock = False  # 添加更新锁
-        
+
         self._build_ui()
     
     def _build_ui(self):
@@ -322,6 +323,12 @@ class FileListPanel(MaterialCard):
         """文件添加完成回调"""
         self._show_loading(False)
         self.refresh()
+
+        # 通知文件监控器
+        if self.on_file_add_callback:
+            added_files = [f.path for f in self.file_handler.files[-count:]] if count > 0 else []
+            self.on_file_add_callback(added_files)
+
         if self.on_update_callback:
             self.on_update_callback(f"✅ 成功添加了 {count} 个文件", 'success')
     
@@ -342,6 +349,12 @@ class FileListPanel(MaterialCard):
         """文件夹添加完成回调"""
         self._show_loading(False)
         self.refresh()
+
+        # 通知文件监控器
+        if self.on_file_add_callback:
+            added_files = [f.path for f in self.file_handler.files[-count:]] if count > 0 else []
+            self.on_file_add_callback(added_files)
+
         if self.on_update_callback:
             self.on_update_callback(f"✅ 成功从文件夹添加了 {count} 个文件", 'success')
     
@@ -607,3 +620,7 @@ class FileListPanel(MaterialCard):
     def set_update_callback(self, callback):
         """设置更新回调"""
         self.on_update_callback = callback
+
+    def set_file_add_callback(self, callback):
+        """设置文件添加回调"""
+        self.on_file_add_callback = callback
