@@ -1,5 +1,5 @@
 """
-主应用窗口
+主应用窗口 - 性能优化版
 """
 
 import customtkinter as ctk
@@ -25,12 +25,18 @@ class MaterialApp(ctk.CTk):
         self.file_handler = FileHandler()
         self.converter = Converter()
         
+        # 窗口调整防抖
+        self._resize_after_id = None
+        
         self._setup_window()
         self._build_ui()
         self._load_saved_state()
         
         # 绑定关闭事件
         self.protocol("WM_DELETE_WINDOW", self._on_closing)
+        
+        # 绑定窗口调整事件
+        self.bind('<Configure>', self._on_window_configure)
     
     def _setup_window(self):
         """设置窗口"""
@@ -80,8 +86,27 @@ class MaterialApp(ctk.CTk):
         self.control_panel.set_preview_callback(self._on_preview)
         self.control_panel.set_convert_callback(self._on_convert)
         
-        # 创建通知标签（初始隐藏）
+        # 通知标签
         self.toast_label = None
+    
+    def _on_window_configure(self, event):
+        """窗口调整事件 - 添加防抖"""
+        # 只处理主窗口的resize事件
+        if event.widget != self:
+            return
+        
+        # 取消之前的延迟调用
+        if self._resize_after_id:
+            self.after_cancel(self._resize_after_id)
+        
+        # 延迟处理resize，避免频繁重绘
+        self._resize_after_id = self.after(100, self._handle_resize)
+    
+    def _handle_resize(self):
+        """处理窗口调整"""
+        self._resize_after_id = None
+        # 强制更新布局
+        self.update_idletasks()
     
     def _on_file_update(self, message: str, type: str = 'info'):
         """文件更新回调"""
@@ -112,7 +137,6 @@ class MaterialApp(ctk.CTk):
     
     def _perform_conversion(self, files):
         """执行转换"""
-        # 选择保存位置
         output_file = filedialog.asksaveasfilename(
             title="保存 Markdown 文件",
             defaultextension=".md",
@@ -153,7 +177,6 @@ class MaterialApp(ctk.CTk):
     
     def _show_toast(self, message: str, type: str = 'info'):
         """显示通知消息"""
-        # 颜色映射
         colors = {
             'success': MD.SUCCESS,
             'error': MD.ERROR,
@@ -163,7 +186,6 @@ class MaterialApp(ctk.CTk):
         
         color = colors.get(type, MD.INFO)
         
-        # 创建通知标签
         if self.toast_label:
             self.toast_label.destroy()
         
@@ -177,28 +199,23 @@ class MaterialApp(ctk.CTk):
             height=48
         )
         
-        # 定位
         self.toast_label.place(relx=0.5, rely=0.92, anchor='center')
         
-        # 自动消失
         self.after(3000, lambda: self.toast_label.destroy() if self.toast_label else None)
     
     def _load_saved_state(self):
         """加载保存的状态"""
-        # 加载最近文件
         recent_files = self.settings.get('recent_files', [])
         for file_path in recent_files:
             if os.path.exists(file_path):
                 self.file_handler.add_file(file_path)
         
-        # 刷新显示
         self.file_panel.refresh()
         self.control_panel.update_stats()
     
     def _save_state(self):
         """保存状态"""
-        # 保存窗口大小
-        geometry = self.geometry().split('+')[0]  # 只取尺寸部分
+        geometry = self.geometry().split('+')[0]
         width, height = map(int, geometry.split('x'))
         
         self.settings.set('window', {
@@ -208,15 +225,12 @@ class MaterialApp(ctk.CTk):
             'min_height': 600
         })
         
-        # 保存文件列表
         max_recent = self.settings.get('max_recent_files', 50)
         recent_files = [f.path for f in self.file_handler.files[:max_recent]]
         self.settings.set('recent_files', recent_files)
         
-        # 保存模板选择
         self.settings.set('template', self.control_panel.get_template())
         
-        # 保存配置
         self.settings.save()
     
     def _on_closing(self):
