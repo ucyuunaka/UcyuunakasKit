@@ -10,6 +10,7 @@ from ui.widgets.material_card import MaterialCard, MaterialButton, MaterialEntry
 from core.file_handler import FileHandler, get_all_languages, format_size
 import os
 from pathlib import Path
+import threading
 
 class FileListPanel(MaterialCard):
     """文件列表面板"""
@@ -19,6 +20,8 @@ class FileListPanel(MaterialCard):
         
         self.file_handler = file_handler
         self.on_update_callback = None
+        self._refresh_pending = False
+        self._loading = False
         
         self._build_ui()
     
@@ -64,6 +67,15 @@ class FileListPanel(MaterialCard):
             text="📁",
             font=("Segoe UI Emoji", 24)
         ).pack(side='left', padx=(MD.SPACING_SM, 0))
+        
+        # 加载指示器
+        self.loading_label = ctk.CTkLabel(
+            header,
+            text="⏳ 加载中...",
+            font=MD.FONT_BODY,
+            text_color=MD.PRIMARY
+        )
+        # 初始隐藏
     
     def _build_search_bar(self, parent):
         """构建搜索栏"""
@@ -72,7 +84,7 @@ class FileListPanel(MaterialCard):
         
         # 搜索框
         self.search_var = tk.StringVar()
-        self.search_var.trace('w', lambda *args: self._filter_files())
+        self.search_var.trace('w', lambda *args: self._schedule_refresh())
         
         search_entry = MaterialEntry(
             search_bar,
@@ -84,7 +96,7 @@ class FileListPanel(MaterialCard):
         
         # 语言筛选
         self.language_var = tk.StringVar(value="全部语言")
-        self.language_var.trace('w', lambda *args: self._filter_files())
+        self.language_var.trace('w', lambda *args: self._schedule_refresh())
         
         languages = ["全部语言"] + get_all_languages()
         language_combo = ctk.CTkComboBox(
@@ -123,6 +135,14 @@ class FileListPanel(MaterialCard):
             command=self._add_folder,
             style='tonal',
             width=120
+        ).pack(side='left', padx=(0, MD.SPACING_SM))
+        
+        MaterialButton(
+            left_buttons,
+            text="🔄 刷新",
+            command=self._refresh_files,
+            style='outlined',
+            width=100
         ).pack(side='left', padx=(0, MD.SPACING_SM))
         
         MaterialButton(
@@ -228,15 +248,13 @@ class FileListPanel(MaterialCard):
         self.file_tree.heading('language', text='语言', anchor='center')
         self.file_tree.heading('size', text='大小', anchor='e')
         
-        # 添加滚动条
+        # 只添加垂直滚动条
         vsb = ttk.Scrollbar(list_container, orient="vertical", command=self.file_tree.yview)
-        hsb = ttk.Scrollbar(list_container, orient="horizontal", command=self.file_tree.xview)
-        self.file_tree.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
+        self.file_tree.configure(yscrollcommand=vsb.set)
         
-        # 布局
+        # 布局（移除了横向滚动条）
         self.file_tree.grid(row=0, column=0, sticky='nsew')
         vsb.grid(row=0, column=1, sticky='ns')
-        hsb.grid(row=1, column=0, sticky='ew')
         
         list_container.grid_rowconfigure(0, weight=1)
         list_container.grid_columnconfigure(0, weight=1)
@@ -274,22 +292,78 @@ class FileListPanel(MaterialCard):
         files = filedialog.askopenfilenames(title="选择代码文件", filetypes=filetypes)
         
         if files:
-            count = self.file_handler.add_files(list(files))
-            self.refresh()
+            self._show_loading(True)
+            # 使用线程处理大量文件
+            def add_files_thread():
+                count = self.file_handler.add_files(list(files))
+                self.after(0, lambda: self._on_files_added(count))
             
-            if self.on_update_callback:
-                self.on_update_callback(f"✅ 成功添加了 {count} 个文件", 'success')
+            thread = threading.Thread(target=add_files_thread, daemon=True)
+            thread.start()
+    
+    def _on_files_added(self, count):
+        """文件添加完成回调"""
+        self._show_loading(False)
+        self.refresh()
+        if self.on_update_callback:
+            self.on_update_callback(f"✅ 成功添加了 {count} 个文件", 'success')
     
     def _add_folder(self):
         """添加文件夹"""
         folder = filedialog.askdirectory(title="选择文件夹")
         
         if folder:
-            count = self.file_handler.add_folder(folder)
-            self.refresh()
+            self._show_loading(True)
+            # 使用线程处理文件夹扫描
+            def add_folder_thread():
+                count = self.file_handler.add_folder(folder)
+                self.after(0, lambda: self._on_folder_added(count))
             
-            if self.on_update_callback:
-                self.on_update_callback(f"✅ 成功从文件夹添加了 {count} 个文件", 'success')
+            thread = threading.Thread(target=add_folder_thread, daemon=True)
+            thread.start()
+    
+    def _on_folder_added(self, count):
+        """文件夹添加完成回调"""
+        self._show_loading(False)
+        self.refresh()
+        if self.on_update_callback:
+            self.on_update_callback(f"✅ 成功从文件夹添加了 {count} 个文件", 'success')
+    
+    def _refresh_files(self):
+        """刷新文件列表"""
+        if self._loading:
+            return
+        
+        self._show_loading(True)
+        
+        def refresh_thread():
+            result = self.file_handler.refresh_files()
+            self.after(0, lambda: self._on_files_refreshed(result))
+        
+        thread = threading.Thread(target=refresh_thread, daemon=True)
+        thread.start()
+    
+    def _on_files_refreshed(self, result):
+        """文件刷新完成回调"""
+        self._show_loading(False)
+        self.refresh()
+        
+        removed_count = result['removed_count']
+        modified_count = result['modified_count']
+        
+        messages = []
+        if removed_count > 0:
+            messages.append(f"移除了 {removed_count} 个不存在的文件")
+        if modified_count > 0:
+            messages.append(f"检测到 {modified_count} 个文件已修改")
+        
+        if messages:
+            message = "🔄 刷新完成: " + ", ".join(messages)
+        else:
+            message = "🔄 刷新完成，所有文件都是最新的"
+        
+        if self.on_update_callback:
+            self.on_update_callback(message, 'success')
     
     def _clear_files(self):
         """清空文件"""
@@ -332,6 +406,19 @@ class FileListPanel(MaterialCard):
         
         for item in self.file_tree.get_children():
             collapse_recursive(item)
+    
+    def _schedule_refresh(self):
+        """延迟刷新（防抖）"""
+        if self._refresh_pending:
+            return
+        
+        self._refresh_pending = True
+        self.after(300, self._execute_refresh)
+    
+    def _execute_refresh(self):
+        """执行刷新"""
+        self._refresh_pending = False
+        self._filter_files()
     
     def _filter_files(self):
         """筛选文件"""
@@ -428,7 +515,10 @@ class FileListPanel(MaterialCard):
                 self.path_to_item[file_info.path] = file_item
     
     def _display_files(self, files):
-        """显示文件列表（树状结构）"""
+        """显示文件列表（树状结构）- 批量更新优化"""
+        # 禁用重绘以提高性能
+        self.file_tree.configure(selectmode='none')
+        
         # 清空现有内容
         for item in self.file_tree.get_children():
             self.file_tree.delete(item)
@@ -444,13 +534,23 @@ class FileListPanel(MaterialCard):
                 text='  暂无文件 - 点击上方按钮添加文件或文件夹',
                 values=('', '', '')
             )
-            return
+        else:
+            # 构建树状结构
+            tree_structure = self._build_tree_structure(files)
+            
+            # 插入树节点
+            self._insert_tree_recursive('', tree_structure)
         
-        # 构建树状结构
-        tree_structure = self._build_tree_structure(files)
-        
-        # 插入树节点
-        self._insert_tree_recursive('', tree_structure)
+        # 恢复选择模式
+        self.file_tree.configure(selectmode='browse')
+    
+    def _show_loading(self, show: bool):
+        """显示/隐藏加载指示器"""
+        self._loading = show
+        if show:
+            self.loading_label.pack(side='right', padx=MD.SPACING_MD)
+        else:
+            self.loading_label.pack_forget()
     
     def refresh(self):
         """刷新显示"""

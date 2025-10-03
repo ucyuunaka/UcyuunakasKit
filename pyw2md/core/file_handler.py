@@ -44,6 +44,8 @@ class FileInfo:
     """文件信息数据类"""
     path: str
     marked: bool = True
+    _cached_size: int = None
+    _cached_mtime: float = None
     
     @property
     def name(self) -> str:
@@ -63,6 +65,26 @@ class FileInfo:
     @property
     def exists(self) -> bool:
         return os.path.exists(self.path)
+    
+    @property
+    def mtime(self) -> float:
+        """获取文件修改时间"""
+        try:
+            return os.path.getmtime(self.path)
+        except:
+            return 0
+    
+    def is_modified(self) -> bool:
+        """检查文件是否被修改"""
+        if self._cached_mtime is None:
+            self._cached_mtime = self.mtime
+            return False
+        return self.mtime != self._cached_mtime
+    
+    def update_cache(self):
+        """更新缓存信息"""
+        self._cached_size = self.size
+        self._cached_mtime = self.mtime
 
 class FileHandler:
     """文件处理器"""
@@ -79,7 +101,9 @@ class FileHandler:
         if any(f.path == path for f in self.files):
             return False
         
-        self.files.append(FileInfo(path=path, marked=True))
+        file_info = FileInfo(path=path, marked=True)
+        file_info.update_cache()
+        self.files.append(file_info)
         return True
     
     def add_files(self, paths: List[str]) -> int:
@@ -155,6 +179,28 @@ class FileHandler:
             result = [f for f in result if f.language == language]
         
         return result
+    
+    def refresh_files(self) -> Dict:
+        """刷新所有文件，移除不存在的，更新缓存"""
+        removed = []
+        modified = []
+        
+        # 检查文件是否存在，是否被修改
+        for file_info in self.files[:]:  # 使用切片创建副本进行迭代
+            if not file_info.exists:
+                self.files.remove(file_info)
+                removed.append(file_info.path)
+            else:
+                if file_info.is_modified():
+                    modified.append(file_info.path)
+                file_info.update_cache()
+        
+        return {
+            'removed': removed,
+            'modified': modified,
+            'removed_count': len(removed),
+            'modified_count': len(modified)
+        }
 
 def get_language(file_path: str) -> str:
     """根据文件扩展名获取编程语言"""
