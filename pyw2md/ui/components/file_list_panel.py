@@ -4,10 +4,12 @@
 
 import customtkinter as ctk
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, ttk
 from config.theme import MD
 from ui.widgets.material_card import MaterialCard, MaterialButton, MaterialEntry
 from core.file_handler import FileHandler, get_all_languages, format_size
+import os
+from pathlib import Path
 
 class FileListPanel(MaterialCard):
     """文件列表面板"""
@@ -35,7 +37,7 @@ class FileListPanel(MaterialCard):
         # 操作按钮栏
         self._build_action_bar(container)
         
-        # 文件列表
+        # 文件列表（树状视图）
         self._build_file_list(container)
         
         # 底部统计
@@ -109,7 +111,7 @@ class FileListPanel(MaterialCard):
         
         MaterialButton(
             left_buttons,
-            text="添加文件",
+            text="➕ 添加文件",
             command=self._add_files,
             style='filled',
             width=120
@@ -149,27 +151,104 @@ class FileListPanel(MaterialCard):
             command=lambda: self._mark_all(False),
             style='outlined',
             width=80
+        ).pack(side='left', padx=(0, MD.SPACING_SM))
+        
+        MaterialButton(
+            right_buttons,
+            text="🔄 展开全部",
+            command=self._expand_all,
+            style='outlined',
+            width=100
+        ).pack(side='left', padx=(0, MD.SPACING_SM))
+        
+        MaterialButton(
+            right_buttons,
+            text="📁 折叠全部",
+            command=self._collapse_all,
+            style='outlined',
+            width=100
         ).pack(side='left')
     
     def _build_file_list(self, parent):
-        """构建文件列表"""
+        """构建文件列表（树状视图）"""
         # 列表容器
         list_container = ctk.CTkFrame(parent, fg_color=MD.SURFACE)
         list_container.pack(fill='both', expand=True, pady=(0, MD.SPACING_MD))
         
-        # 文本框
-        self.file_textbox = ctk.CTkTextbox(
-            list_container,
-            font=MD.FONT_MONO,
-            fg_color=MD.SURFACE,
-            text_color=MD.ON_SURFACE,
-            wrap='none'
+        # 创建样式
+        style = ttk.Style()
+        style.theme_use('clam')
+        
+        # 配置 Treeview 样式以匹配 Material Design
+        style.configure(
+            "Material.Treeview",
+            background=MD.SURFACE,
+            foreground=MD.ON_SURFACE,
+            fieldbackground=MD.SURFACE,
+            borderwidth=0,
+            font=MD.FONT_BODY,
+            rowheight=32
         )
-        self.file_textbox.pack(fill='both', expand=True)
+        
+        style.configure(
+            "Material.Treeview.Heading",
+            background=MD.SURFACE_2,
+            foreground=MD.ON_SURFACE,
+            borderwidth=1,
+            relief="flat",
+            font=MD.FONT_TITLE
+        )
+        
+        # 配置选中和悬停样式
+        style.map(
+            "Material.Treeview",
+            background=[('selected', MD.PRIMARY_CONTAINER)],
+            foreground=[('selected', MD.ON_PRIMARY_CONTAINER)]
+        )
+        
+        # 创建 Treeview
+        columns = ('status', 'language', 'size')
+        self.file_tree = ttk.Treeview(
+            list_container,
+            columns=columns,
+            show='tree headings',
+            style="Material.Treeview",
+            selectmode='browse'
+        )
+        
+        # 配置列
+        self.file_tree.column('#0', width=400, minwidth=200, stretch=True)
+        self.file_tree.column('status', width=80, minwidth=60, anchor='center', stretch=False)
+        self.file_tree.column('language', width=120, minwidth=80, anchor='center', stretch=False)
+        self.file_tree.column('size', width=100, minwidth=80, anchor='e', stretch=False)
+        
+        # 设置列标题
+        self.file_tree.heading('#0', text='📁 文件路径', anchor='w')
+        self.file_tree.heading('status', text='状态', anchor='center')
+        self.file_tree.heading('language', text='语言', anchor='center')
+        self.file_tree.heading('size', text='大小', anchor='e')
+        
+        # 添加滚动条
+        vsb = ttk.Scrollbar(list_container, orient="vertical", command=self.file_tree.yview)
+        hsb = ttk.Scrollbar(list_container, orient="horizontal", command=self.file_tree.xview)
+        self.file_tree.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
+        
+        # 布局
+        self.file_tree.grid(row=0, column=0, sticky='nsew')
+        vsb.grid(row=0, column=1, sticky='ns')
+        hsb.grid(row=1, column=0, sticky='ew')
+        
+        list_container.grid_rowconfigure(0, weight=1)
+        list_container.grid_columnconfigure(0, weight=1)
         
         # 绑定事件
-        self.file_textbox.bind('<Button-1>', self._on_file_click)
-        self.file_textbox.bind('<space>', lambda e: self._toggle_current_mark())
+        self.file_tree.bind('<Double-Button-1>', self._on_item_double_click)
+        self.file_tree.bind('<space>', self._on_space_press)
+        self.file_tree.bind('<Button-1>', self._on_item_click)
+        
+        # 存储节点到文件路径的映射
+        self.item_to_path = {}
+        self.path_to_item = {}
     
     def _build_footer(self, parent):
         """构建底部统计"""
@@ -199,7 +278,7 @@ class FileListPanel(MaterialCard):
             self.refresh()
             
             if self.on_update_callback:
-                self.on_update_callback(f"成功添加了 {count} 个文件", 'success')
+                self.on_update_callback(f"✅ 成功添加了 {count} 个文件", 'success')
     
     def _add_folder(self):
         """添加文件夹"""
@@ -210,14 +289,13 @@ class FileListPanel(MaterialCard):
             self.refresh()
             
             if self.on_update_callback:
-                self.on_update_callback(f"成功从文件夹添加了 {count} 个文件", 'success')
+                self.on_update_callback(f"✅ 成功从文件夹添加了 {count} 个文件", 'success')
     
     def _clear_files(self):
         """清空文件"""
         if not self.file_handler.files:
             return
         
-        # 简化版确认（可以后续替换为自定义对话框）
         from tkinter import messagebox
         if messagebox.askyesno("确认清空", "确定要清空所有文件吗？"):
             self.file_handler.clear()
@@ -232,8 +310,28 @@ class FileListPanel(MaterialCard):
         self.refresh()
         
         if self.on_update_callback:
-            msg = "已全选" if marked else "已取消全选"
+            msg = "✅ 已全选" if marked else "⬜ 已取消全选"
             self.on_update_callback(msg, 'info')
+    
+    def _expand_all(self):
+        """展开所有节点"""
+        def expand_recursive(item):
+            self.file_tree.item(item, open=True)
+            for child in self.file_tree.get_children(item):
+                expand_recursive(child)
+        
+        for item in self.file_tree.get_children():
+            expand_recursive(item)
+    
+    def _collapse_all(self):
+        """折叠所有节点"""
+        def collapse_recursive(item):
+            self.file_tree.item(item, open=False)
+            for child in self.file_tree.get_children(item):
+                collapse_recursive(child)
+        
+        for item in self.file_tree.get_children():
+            collapse_recursive(item)
     
     def _filter_files(self):
         """筛选文件"""
@@ -247,74 +345,112 @@ class FileListPanel(MaterialCard):
         
         self._display_files(filtered)
     
-    def _on_file_click(self, event):
-        """文件点击事件"""
-        # 获取点击位置的行
-        index = self.file_textbox.index(f"@{event.x},{event.y}")
-        line_num = int(index.split('.')[0])
-        
-        # 获取该行内容
-        line_start = f"{line_num}.0"
-        line_end = f"{line_num}.end"
-        line_content = self.file_textbox.get(line_start, line_end)
-        
-        # 解析文件名并切换标记
-        if line_content.strip():
-            parts = line_content.strip().split('│')
-            if len(parts) >= 2:
-                filename = parts[1].strip().lstrip('✓ ').lstrip('☐ ')
-                
-                # 找到对应文件并切换标记
-                for file_info in self.file_handler.files:
-                    if file_info.name == filename:
-                        self.file_handler.toggle_mark(file_info.path)
-                        self.refresh()
-                        break
+    def _on_item_click(self, event):
+        """单击项目"""
+        item = self.file_tree.identify('item', event.x, event.y)
+        if item and item in self.item_to_path:
+            # 只处理文件节点
+            file_path = self.item_to_path[item]
+            self._toggle_mark(file_path)
     
-    def _toggle_current_mark(self):
-        """切换当前行的标记状态"""
-        cursor_pos = self.file_textbox.index(tk.INSERT)
-        line_num = int(cursor_pos.split('.')[0])
+    def _on_item_double_click(self, event):
+        """双击项目"""
+        item = self.file_tree.selection()
+        if item:
+            # 展开/折叠文件夹
+            if self.file_tree.get_children(item[0]):
+                current_state = self.file_tree.item(item[0], 'open')
+                self.file_tree.item(item[0], open=not current_state)
+    
+    def _on_space_press(self, event):
+        """空格键切换标记"""
+        item = self.file_tree.selection()
+        if item and item[0] in self.item_to_path:
+            file_path = self.item_to_path[item[0]]
+            self._toggle_mark(file_path)
+    
+    def _toggle_mark(self, file_path: str):
+        """切换文件标记状态"""
+        self.file_handler.toggle_mark(file_path)
+        self.refresh()
+    
+    def _build_tree_structure(self, files):
+        """构建树状结构"""
+        # 按路径组织文件
+        tree_dict = {}
         
-        line_start = f"{line_num}.0"
-        line_end = f"{line_num}.end"
-        line_content = self.file_textbox.get(line_start, line_end)
+        for file_info in files:
+            path = Path(file_info.path)
+            parts = path.parts
+            
+            # 构建树状字典
+            current = tree_dict
+            for i, part in enumerate(parts[:-1]):  # 除了文件名的所有部分
+                if part not in current:
+                    current[part] = {}
+                current = current[part]
+            
+            # 添加文件
+            filename = parts[-1]
+            current[filename] = file_info
         
-        if line_content.strip():
-            parts = line_content.strip().split('│')
-            if len(parts) >= 2:
-                filename = parts[1].strip().lstrip('✓ ').lstrip('☐ ')
+        return tree_dict
+    
+    def _insert_tree_recursive(self, parent_item, tree_dict, prefix=""):
+        """递归插入树节点"""
+        for name, value in sorted(tree_dict.items()):
+            if isinstance(value, dict):
+                # 这是一个文件夹
+                folder_item = self.file_tree.insert(
+                    parent_item,
+                    'end',
+                    text=f"📁 {name}",
+                    values=('', '', ''),
+                    open=True
+                )
+                # 递归处理子项
+                self._insert_tree_recursive(folder_item, value, prefix + name + os.sep)
+            else:
+                # 这是一个文件
+                file_info = value
+                icon = "✅" if file_info.marked else "⬜"
                 
-                for file_info in self.file_handler.files:
-                    if file_info.name == filename:
-                        self.file_handler.toggle_mark(file_info.path)
-                        self.refresh()
-                        break
+                file_item = self.file_tree.insert(
+                    parent_item,
+                    'end',
+                    text=f"📄 {name}",
+                    values=(icon, file_info.language, format_size(file_info.size)),
+                    tags=('file',)
+                )
+                
+                # 存储映射关系
+                self.item_to_path[file_item] = file_info.path
+                self.path_to_item[file_info.path] = file_item
     
     def _display_files(self, files):
-        """显示文件列表"""
-        self.file_textbox.delete('1.0', 'end')
+        """显示文件列表（树状结构）"""
+        # 清空现有内容
+        for item in self.file_tree.get_children():
+            self.file_tree.delete(item)
+        
+        self.item_to_path.clear()
+        self.path_to_item.clear()
         
         if not files:
-            self.file_textbox.insert('end', '\n  暂无文件\n\n  点击上方按钮添加文件或文件夹')
+            # 显示空状态
+            empty_item = self.file_tree.insert(
+                '',
+                'end',
+                text='  暂无文件 - 点击上方按钮添加文件或文件夹',
+                values=('', '', '')
+            )
             return
         
-        # 表头
-        header = f"{'状态':^6}│ {'文件名':<40} │ {'语言':<15} │ {'大小':<10}\n"
-        separator = "─" * 80 + "\n"
+        # 构建树状结构
+        tree_structure = self._build_tree_structure(files)
         
-        self.file_textbox.insert('end', header)
-        self.file_textbox.insert('end', separator)
-        
-        # 文件列表
-        for file_info in files:
-            icon = "✓" if file_info.marked else "☐"
-            name = file_info.name[:38] + '..' if len(file_info.name) > 40 else file_info.name
-            language = file_info.language
-            size = format_size(file_info.size)
-            
-            line = f"  {icon:^4}│ {name:<40} │ {language:<15} │ {size:<10}\n"
-            self.file_textbox.insert('end', line)
+        # 插入树节点
+        self._insert_tree_recursive('', tree_structure)
     
     def refresh(self):
         """刷新显示"""
@@ -323,9 +459,9 @@ class FileListPanel(MaterialCard):
         # 更新统计
         stats = self.file_handler.get_stats()
         self.stats_label.configure(
-            text=f"{stats['marked']}/{stats['total']} 个文件已选中  •  "
-                 f"共 {format_size(stats['size'])}  •  "
-                 f"{stats['languages']} 种语言"
+            text=f"📊 {stats['marked']}/{stats['total']} 个文件已选中  •  "
+                 f"💾 共 {format_size(stats['size'])}  •  "
+                 f"🔤 {stats['languages']} 种语言"
         )
     
     def set_update_callback(self, callback):
