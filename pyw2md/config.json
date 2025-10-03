@@ -1,0 +1,13 @@
+{
+  "window": {
+    "width": 1280,
+    "height": 800,
+    "min_width": 1000,
+    "min_height": 600
+  },
+  "template": "默认",
+  "recent_files": [],
+  "max_recent_files": 50,
+  "auto_save_config": true,
+  "preview_max_files": 5
+}
