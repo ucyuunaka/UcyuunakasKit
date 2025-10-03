@@ -1,5 +1,5 @@
 """
-主应用窗口 - 性能优化版 + 拖放 + 文件监控
+主应用窗口 - 优化版（拖放降级 + 性能优化）
 """
 
 import customtkinter as ctk
@@ -18,13 +18,43 @@ from config.theme import MD
 from config.settings import Settings
 from core.file_handler import FileHandler
 from core.converter import Converter
-from core.file_watcher import FileWatcher  # 新增
+from core.file_watcher import FileWatcher
 from ui.components.file_list_panel import FileListPanel
 from ui.components.control_panel import ControlPanel
 from ui.components.dialogs import TemplatePreviewDialog, ConversionPreviewDialog
 
-class MaterialApp(TkinterDnD.Tk if DRAG_DROP_AVAILABLE else ctk.CTk):
-    """主应用程序"""
+
+# ============ 优雅降级基类 ============
+class DragDropMixin:
+    """拖放功能混合类 - 提供安全的降级处理"""
+    
+    def drop_target_register(self, *args, **kwargs):
+        """安全的拖放注册"""
+        if DRAG_DROP_AVAILABLE and hasattr(super(), 'drop_target_register'):
+            return super().drop_target_register(*args, **kwargs)
+        return None
+    
+    def dnd_bind(self, *args, **kwargs):
+        """安全的拖放绑定"""
+        if DRAG_DROP_AVAILABLE and hasattr(super(), 'dnd_bind'):
+            return super().dnd_bind(*args, **kwargs)
+        return None
+
+
+if DRAG_DROP_AVAILABLE:
+    class AppBase(DragDropMixin, TkinterDnD.Tk):
+        """支持拖放的基类"""
+        def __init__(self):
+            TkinterDnD.Tk.__init__(self)
+else:
+    class AppBase(DragDropMixin, ctk.CTk):
+        """不支持拖放的降级基类"""
+        def __init__(self):
+            ctk.CTk.__init__(self)
+
+
+class MaterialApp(AppBase):
+    """主应用程序 - 性能优化版"""
     
     def __init__(self):
         super().__init__()
@@ -47,7 +77,7 @@ class MaterialApp(TkinterDnD.Tk if DRAG_DROP_AVAILABLE else ctk.CTk):
         
         self._setup_window()
         self._build_ui()
-        self._setup_drag_drop()  # 新增
+        self._setup_drag_drop()
         self._load_saved_state()
         
         # 启动文件监控
@@ -56,19 +86,15 @@ class MaterialApp(TkinterDnD.Tk if DRAG_DROP_AVAILABLE else ctk.CTk):
         
         # 绑定关闭事件
         self.protocol("WM_DELETE_WINDOW", self._on_closing)
-        
-        # 绑定窗口调整事件
         self.bind('<Configure>', self._on_window_configure)
     
     def _setup_window(self):
         """设置窗口"""
-        self.title("代码转Markdown工具")
+        self.title("代码转Markdown工具 - 性能优化版")
         
-        # 窗口大小
         width = self.settings.get('window', {}).get('width', 1280)
         height = self.settings.get('window', {}).get('height', 800)
         
-        # 居中显示
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
         x = (screen_width - width) // 2
@@ -76,64 +102,96 @@ class MaterialApp(TkinterDnD.Tk if DRAG_DROP_AVAILABLE else ctk.CTk):
         
         self.geometry(f"{width}x{height}+{x}+{y}")
         
-        # 最小尺寸
         min_width = self.settings.get('window', {}).get('min_width', 1000)
         min_height = self.settings.get('window', {}).get('min_height', 600)
         self.minsize(min_width, min_height)
         
-        # 背景色 - 根据父类类型设置
-        if DRAG_DROP_AVAILABLE:
-            # TkinterDnD.Tk 使用标准 tkinter 的背景设置
-            self.configure(bg=MD.BACKGROUND)
-        else:
-            # customtkinter.CTk 使用 fg_color
-            self.configure(fg_color=MD.BACKGROUND)
+        # 统一背景色设置
+        self._set_background_color()
+    
+    def _set_background_color(self):
+        """设置背景色 - 兼容不同父类"""
+        try:
+            if DRAG_DROP_AVAILABLE:
+                self.configure(bg=MD.BACKGROUND)
+            else:
+                self.configure(fg_color=MD.BACKGROUND)
+        except Exception as e:
+            print(f"设置背景色失败: {e}")
     
     def _setup_drag_drop(self):
-        """设置拖放功能"""
+        """设置拖放功能 - 安全降级"""
         if not DRAG_DROP_AVAILABLE:
+            print("拖放功能不可用，已降级为文件选择模式")
+            self._show_drag_drop_hint()
             return
         
-        # 为主窗口注册拖放
-        self.drop_target_register(DND_FILES)
-        self.dnd_bind('<<Drop>>', self._on_drop)
-        
-        # 为文件列表面板注册拖放
-        if hasattr(self, 'file_panel'):
-            self.file_panel.drop_target_register(DND_FILES)
-            self.file_panel.dnd_bind('<<Drop>>', self._on_drop)
+        try:
+            # 为主窗口注册拖放
+            self.drop_target_register(DND_FILES)
+            self.dnd_bind('<<Drop>>', self._on_drop)
+            
+            # 为文件列表面板注册拖放
+            if hasattr(self, 'file_panel'):
+                self.file_panel.drop_target_register(DND_FILES)
+                self.file_panel.dnd_bind('<<Drop>>', self._on_drop)
+            
+            print("✅ 拖放功能已启用")
+        except Exception as e:
+            print(f"⚠️ 拖放功能初始化失败: {e}")
+    
+    def _show_drag_drop_hint(self):
+        """显示拖放功能提示"""
+        hint = ctk.CTkLabel(
+            self,
+            text="💡 提示: 安装 tkinterdnd2 启用拖放功能",
+            font=MD.FONT_LABEL,
+            text_color=MD.WARNING
+        )
+        hint.pack(side='top', pady=MD.SPACING_SM)
+        self.after(5000, hint.destroy)
     
     def _on_drop(self, event):
         """处理拖放事件"""
-        # 获取拖放的文件路径
         files = self._parse_drop_files(event.data)
         
         if not files:
             return
         
-        added_files = 0
-        added_folders = 0
+        # 异步处理拖放文件
+        self._process_dropped_files_async(files)
+    
+    def _process_dropped_files_async(self, files):
+        """异步处理拖放的文件"""
+        import threading
         
-        for path in files:
-            if os.path.isfile(path):
-                if self.file_handler.add_file(path):
-                    added_files += 1
-                    # 添加到监控
+        def process():
+            added_files = 0
+            added_folders = 0
+            
+            for path in files:
+                if os.path.isfile(path):
+                    if self.file_handler.add_file(path):
+                        added_files += 1
+                        if self.watch_enabled:
+                            self.file_watcher.add_file(path)
+                elif os.path.isdir(path):
+                    count = self.file_handler.add_folder(path)
+                    added_folders += count
                     if self.watch_enabled:
-                        self.file_watcher.add_file(path)
-            elif os.path.isdir(path):
-                count = self.file_handler.add_folder(path)
-                added_folders += count
-                # 添加文件夹中的文件到监控
-                if self.watch_enabled:
-                    for file_info in self.file_handler.files:
-                        self.file_watcher.add_file(file_info.path)
+                        for file_info in self.file_handler.files[-count:]:
+                            self.file_watcher.add_file(file_info.path)
+            
+            # UI更新必须在主线程
+            self.after(0, lambda: self._on_drop_complete(added_files, added_folders))
         
-        # 刷新显示
+        threading.Thread(target=process, daemon=True).start()
+    
+    def _on_drop_complete(self, added_files, added_folders):
+        """拖放完成回调"""
         self.file_panel.refresh()
         self.control_panel.update_stats()
         
-        # 显示提示
         messages = []
         if added_files > 0:
             messages.append(f"{added_files} 个文件")
@@ -148,9 +206,7 @@ class MaterialApp(TkinterDnD.Tk if DRAG_DROP_AVAILABLE else ctk.CTk):
     
     def _parse_drop_files(self, data):
         """解析拖放的文件路径"""
-        # Windows 和 Linux 的路径格式可能不同
         if data.startswith('{'):
-            # Windows 带花括号的格式: {path1} {path2}
             files = []
             current = ""
             in_braces = False
@@ -168,7 +224,6 @@ class MaterialApp(TkinterDnD.Tk if DRAG_DROP_AVAILABLE else ctk.CTk):
             
             return files
         else:
-            # 简单空格分隔
             return data.split()
     
     def _on_file_changed(self, event_type: str, file_path: str):
@@ -194,7 +249,6 @@ class MaterialApp(TkinterDnD.Tk if DRAG_DROP_AVAILABLE else ctk.CTk):
         if messages:
             msg = "🔔 检测到文件变化: " + ", ".join(messages)
             
-            # 创建通知栏
             if not hasattr(self, 'notification_bar') or not self.notification_bar.winfo_exists():
                 self._create_notification_bar(msg)
             else:
@@ -212,7 +266,6 @@ class MaterialApp(TkinterDnD.Tk if DRAG_DROP_AVAILABLE else ctk.CTk):
         content = ctk.CTkFrame(self.notification_bar, fg_color='transparent')
         content.pack(fill='both', expand=True, padx=MD.SPACING_MD, pady=MD.SPACING_SM)
         
-        # 消息
         self.notification_label = ctk.CTkLabel(
             content,
             text=message,
@@ -221,11 +274,9 @@ class MaterialApp(TkinterDnD.Tk if DRAG_DROP_AVAILABLE else ctk.CTk):
         )
         self.notification_label.pack(side='left', padx=(0, MD.SPACING_MD))
         
-        # 按钮容器
         button_frame = ctk.CTkFrame(content, fg_color='transparent')
         button_frame.pack(side='right')
         
-        # 刷新按钮
         ctk.CTkButton(
             button_frame,
             text="🔄 刷新",
@@ -236,7 +287,6 @@ class MaterialApp(TkinterDnD.Tk if DRAG_DROP_AVAILABLE else ctk.CTk):
             height=32
         ).pack(side='left', padx=(0, MD.SPACING_SM))
         
-        # 关闭按钮
         ctk.CTkButton(
             button_frame,
             text="✕",
@@ -249,32 +299,26 @@ class MaterialApp(TkinterDnD.Tk if DRAG_DROP_AVAILABLE else ctk.CTk):
     
     def _refresh_changed_files(self):
         """刷新变化的文件"""
-        # 移除已删除的文件
         for file_path in self.deleted_files:
             self.file_handler.remove_file(file_path)
             self.file_watcher.remove_file(file_path)
         
-        # 更新已修改文件的缓存
         for file_path in self.modified_files:
             for file_info in self.file_handler.files:
                 if file_info.path == file_path:
                     file_info.update_cache()
                     break
         
-        # 刷新显示
         self.file_panel.refresh()
         self.control_panel.update_stats()
         
-        # 清空变化记录
         modified_count = len(self.modified_files)
         deleted_count = len(self.deleted_files)
         self.modified_files.clear()
         self.deleted_files.clear()
         
-        # 关闭通知栏
         self._close_notification()
         
-        # 显示提示
         msg = f"✅ 已刷新: {modified_count} 个修改, {deleted_count} 个删除"
         self._show_toast(msg, 'success')
     
@@ -288,34 +332,33 @@ class MaterialApp(TkinterDnD.Tk if DRAG_DROP_AVAILABLE else ctk.CTk):
     
     def _build_ui(self):
         """构建UI"""
-        # 配置网格
         self.grid_columnconfigure(0, weight=3)
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
         
-        # 文件列表面板
         self.file_panel = FileListPanel(self, self.file_handler)
         self.file_panel.grid(row=0, column=0, sticky='nsew', 
                            padx=(MD.SPACING_LG, MD.SPACING_SM), 
                            pady=MD.SPACING_LG)
         
-        # 控制面板
         self.control_panel = ControlPanel(self, self.file_handler)
         self.control_panel.grid(row=0, column=1, sticky='nsew',
                               padx=(MD.SPACING_SM, MD.SPACING_LG),
                               pady=MD.SPACING_LG)
         
-        # 设置回调
         self.file_panel.set_update_callback(self._on_file_update)
-        self.file_panel.set_file_add_callback(self._on_files_added_to_list)  # 新增
+        self.file_panel.set_file_add_callback(self._on_files_added_to_list)
         self.control_panel.set_preview_callback(self._on_preview)
         self.control_panel.set_convert_callback(self._on_convert)
         
-        # 通知标签
+        # 注册拖放（延迟到UI构建完成后）
+        if DRAG_DROP_AVAILABLE:
+            self.after(100, self._setup_drag_drop)
+        
         self.toast_label = None
     
     def _on_files_added_to_list(self, file_paths: list):
-        """文件添加到列表的回调 - 添加到监控"""
+        """文件添加到列表的回调"""
         if not self.watch_enabled:
             return
         
@@ -323,22 +366,18 @@ class MaterialApp(TkinterDnD.Tk if DRAG_DROP_AVAILABLE else ctk.CTk):
             self.file_watcher.add_file(file_path)
     
     def _on_window_configure(self, event):
-        """窗口调整事件 - 添加防抖"""
-        # 只处理主窗口的resize事件
+        """窗口调整事件"""
         if event.widget != self:
             return
         
-        # 取消之前的延迟调用
         if self._resize_after_id:
             self.after_cancel(self._resize_after_id)
         
-        # 延迟处理resize，避免频繁重绘
         self._resize_after_id = self.after(100, self._handle_resize)
     
     def _handle_resize(self):
         """处理窗口调整"""
         self._resize_after_id = None
-        # 强制更新布局
         self.update_idletasks()
     
     def _on_file_update(self, message: str, type: str = 'info'):
@@ -369,7 +408,7 @@ class MaterialApp(TkinterDnD.Tk if DRAG_DROP_AVAILABLE else ctk.CTk):
             self._perform_conversion(data)
     
     def _perform_conversion(self, files):
-        """执行转换"""
+        """执行转换 - 异步优化"""
         output_file = filedialog.asksaveasfilename(
             title="保存 Markdown 文件",
             defaultextension=".md",
@@ -379,25 +418,27 @@ class MaterialApp(TkinterDnD.Tk if DRAG_DROP_AVAILABLE else ctk.CTk):
         if not output_file:
             return
         
-        # 显示进度
         self.control_panel.show_progress()
         
-        # 设置转换器
         template = self.control_panel.get_template()
         self.converter.set_template(template)
         
-        # 进度回调
-        def progress_callback(current, total, filename):
-            self.control_panel.update_progress(current, total, filename)
-            self.update_idletasks()
+        # 异步转换
+        import threading
         
-        # 执行转换
-        result = self.converter.convert_files(files, output_file, progress_callback)
+        def convert_thread():
+            def progress_callback(current, total, filename):
+                self.after(0, lambda: self.control_panel.update_progress(current, total, filename))
+            
+            result = self.converter.convert_files(files, output_file, progress_callback)
+            self.after(0, lambda: self._on_conversion_complete(result, output_file))
         
-        # 隐藏进度
+        threading.Thread(target=convert_thread, daemon=True).start()
+    
+    def _on_conversion_complete(self, result, output_file):
+        """转换完成回调"""
         self.after(1000, self.control_panel.hide_progress)
         
-        # 显示结果
         if result['success']:
             self._show_toast(f"✅ {result['message']}", 'success')
             messagebox.showinfo(
@@ -442,7 +483,6 @@ class MaterialApp(TkinterDnD.Tk if DRAG_DROP_AVAILABLE else ctk.CTk):
         for file_path in recent_files:
             if os.path.exists(file_path):
                 self.file_handler.add_file(file_path)
-                # 添加到监控
                 if self.watch_enabled:
                     self.file_watcher.add_file(file_path)
         
@@ -471,7 +511,6 @@ class MaterialApp(TkinterDnD.Tk if DRAG_DROP_AVAILABLE else ctk.CTk):
     
     def _on_closing(self):
         """关闭窗口"""
-        # 停止文件监控
         if self.watch_enabled:
             self.file_watcher.stop()
         

@@ -104,6 +104,9 @@ class FileWatcher:
         # 如果该目录还没有被监控，添加监控
         if dir_path not in self.watched_dirs:
             self.watched_dirs[dir_path] = set()
+            # 确保 handler 已初始化
+            if self.handler is None:
+                self.handler = FileChangeHandler(self.callback, self.watched_files)
             try:
                 self.observer.schedule(self.handler, dir_path, recursive=False)
             except Exception as e:
