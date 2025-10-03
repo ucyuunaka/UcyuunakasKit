@@ -92,7 +92,7 @@ class TemplatePreviewDialog(PreviewDialog):
         super().__init__(parent, f"模板预览 - {template_name}", 700, 500)
         
         self._build_header(
-            f"📋 {template_name} 模板",
+            f"{template_name} 模板",
             "查看模板的格式和结构"
         )
         

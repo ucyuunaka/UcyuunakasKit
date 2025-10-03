@@ -1,6 +1,5 @@
 """
-Code2Markdown - Material Design 3
-现代化代码转Markdown工具
+代码转Markdown工具
 """
 
 import customtkinter as ctk

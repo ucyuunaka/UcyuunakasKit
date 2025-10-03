@@ -19,11 +19,11 @@ TEMPLATES = {
 
 """,
     
-    "详细信息": """## 📄 {basename}
+    "详细信息": """## {basename}
 
-**路径:** `{relative_path}`  
-**语言:** {language}  
-**大小:** {size}  
+**路径:** `{relative_path}`
+**语言:** {language}
+**大小:** {size}
 **修改时间:** {mtime}
 
 ```{language}
@@ -41,7 +41,7 @@ TEMPLATES = {
 ```
 
 <details>
-<summary>📋 文件信息</summary>
+<summary>文件信息</summary>
 
 - **完整路径:** `{relative_path}`
 - **编程语言:** {language}
@@ -73,12 +73,12 @@ TEMPLATES = {
 </details>
 
 """,
-    
+
     "专业文档": """## {basename}
 
-> 📍 路径: `{relative_path}`  
-> 🏷️ 语言: **{language}**  
-> 📦 大小: {size}
+> 路径: `{relative_path}`
+> 语言: **{language}**
+> 大小: {size}
 
 ```{language}
 {content}
@@ -210,16 +210,16 @@ class Converter:
     def _generate_header(self, files: list[FileInfo]) -> str:
         """生成文档头部"""
         from core.file_handler import format_size
-        
+
         total_size = sum(f.size for f in files)
         languages = set(f.language for f in files)
-        
-        header = f"""# 📚 Code to Markdown
 
-**生成时间:** {time.strftime("%Y-%m-%d %H:%M:%S")}  
-**文件数量:** {len(files)}  
-**总大小:** {format_size(total_size)}  
-**编程语言:** {', '.join(sorted(languages))}  
+        header = f"""# 代码转Markdown文档
+
+**生成时间:** {time.strftime("%Y-%m-%d %H:%M:%S")}
+**文件数量:** {len(files)}
+**总大小:** {format_size(total_size)}
+**编程语言:** {', '.join(sorted(languages))}
 **使用模板:** {self.template}
 
 ---
@@ -233,15 +233,15 @@ class Converter:
 
 ---
 
-## 📊 转换统计
+## 转换统计
 
-- ✅ 成功转换: **{success}** 个文件
-- 📝 总计处理: **{total}** 个文件
-- 🕐 完成时间: {time.strftime("%Y-%m-%d %H:%M:%S")}
+- 成功转换: **{success}** 个文件
+- 总计处理: **{total}** 个文件
+- 完成时间: {time.strftime("%Y-%m-%d %H:%M:%S")}
 
 ---
 
-*由 Code2Markdown 生成 - Material Design 3 版本*
+文档生成完成
 """
         return footer
 

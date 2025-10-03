@@ -110,7 +110,7 @@ class ControlPanel(MaterialCard):
         # 区域标题
         ctk.CTkLabel(
             parent,
-            text="📊 统计信息",
+            text="统计信息",
             font=MD.FONT_TITLE,
             text_color=MD.ON_SURFACE,
             anchor='w'
@@ -125,10 +125,10 @@ class ControlPanel(MaterialCard):
         
         # 创建统计卡片
         self.stat_cards = {
-            'total': StatCard(stats_grid, "📄", "总文件", "0"),
-            'marked': StatCard(stats_grid, "✅", "已选中", "0"),
-            'size': StatCard(stats_grid, "💾", "总大小", "0 B"),
-            'languages': StatCard(stats_grid, "🏷️", "语言数", "0")
+            'total': StatCard(stats_grid, "文件", "总文件", "0"),
+            'marked': StatCard(stats_grid, "选中", "已选中", "0"),
+            'size': StatCard(stats_grid, "大小", "总大小", "0 B"),
+            'languages': StatCard(stats_grid, "语言", "语言数", "0")
         }
         
         self.stat_cards['total'].grid(row=0, column=0, sticky='ew', padx=(0, MD.SPACING_XS), pady=(0, MD.SPACING_XS))

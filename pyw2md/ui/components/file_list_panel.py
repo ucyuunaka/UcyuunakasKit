@@ -109,7 +109,7 @@ class FileListPanel(MaterialCard):
         
         MaterialButton(
             left_buttons,
-            text="📄 添加文件",
+            text="添加文件",
             command=self._add_files,
             style='filled',
             width=120
@@ -199,7 +199,7 @@ class FileListPanel(MaterialCard):
             self.refresh()
             
             if self.on_update_callback:
-                self.on_update_callback(f"✅ 添加了 {count} 个文件", 'success')
+                self.on_update_callback(f"成功添加了 {count} 个文件", 'success')
     
     def _add_folder(self):
         """添加文件夹"""
@@ -210,7 +210,7 @@ class FileListPanel(MaterialCard):
             self.refresh()
             
             if self.on_update_callback:
-                self.on_update_callback(f"✅ 从文件夹添加了 {count} 个文件", 'success')
+                self.on_update_callback(f"成功从文件夹添加了 {count} 个文件", 'success')
     
     def _clear_files(self):
         """清空文件"""
@@ -232,7 +232,7 @@ class FileListPanel(MaterialCard):
         self.refresh()
         
         if self.on_update_callback:
-            msg = "✅ 已全选" if marked else "⬜ 已取消全选"
+            msg = "已全选" if marked else "已取消全选"
             self.on_update_callback(msg, 'info')
     
     def _filter_files(self):

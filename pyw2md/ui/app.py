@@ -34,7 +34,7 @@ class MaterialApp(ctk.CTk):
     
     def _setup_window(self):
         """设置窗口"""
-        self.title("Code2Markdown - Material Design 3")
+        self.title("代码转Markdown工具")
         
         # 窗口大小
         width = self.settings.get('window', {}).get('width', 1280)
@@ -142,7 +142,7 @@ class MaterialApp(ctk.CTk):
         
         # 显示结果
         if result['success']:
-            self._show_toast(f"✅ {result['message']}", 'success')
+            self._show_toast(f"成功: {result['message']}", 'success')
             messagebox.showinfo(
                 "转换完成",
                 f"{result['message']}\n\n保存位置: {output_file}"
