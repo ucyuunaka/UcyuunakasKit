@@ -1,5 +1,5 @@
 """
-文件列表面板组件 - 虚拟化渲染优化版
+文件列表面板组件 - 性能优化版本
 """
 
 import customtkinter as ctk
@@ -13,36 +13,39 @@ from pathlib import Path
 import threading
 
 class FileListPanel(MaterialCard):
-    """文件列表面板 - 性能优化版"""
-    
-    # 渲染优化参数
-    BATCH_SIZE = 100  # 每批渲染的节点数
-    RENDER_DELAY = 10  # 批次间延迟（毫秒）
+    """文件列表面板"""
     
     def __init__(self, master, file_handler: FileHandler, **kwargs):
         super().__init__(master, elevation=1, **kwargs)
-
+        
         self.file_handler = file_handler
         self.on_update_callback = None
-        self.on_file_add_callback = None
         self._refresh_pending = False
         self._loading = False
         self._loading_animation_id = None
-        self._update_lock = False
-        self._render_queue = []  # 渲染队列
-        self._render_job_id = None  # 渲染任务ID
-
+        self._update_lock = False  # 添加更新锁
+        
         self._build_ui()
     
     def _build_ui(self):
         """构建UI"""
+        # 主容器
         container = ctk.CTkFrame(self, fg_color='transparent')
         container.pack(fill='both', expand=True, padx=MD.SPACING_MD, pady=MD.SPACING_MD)
         
+        # 标题栏
         self._build_header(container)
+        
+        # 搜索和筛选栏
         self._build_search_bar(container)
+        
+        # 操作按钮栏
         self._build_action_bar(container)
+        
+        # 文件列表（树状视图）
         self._build_file_list(container)
+        
+        # 底部统计
         self._build_footer(container)
     
     def _build_header(self, parent):
@@ -50,6 +53,7 @@ class FileListPanel(MaterialCard):
         header = ctk.CTkFrame(parent, fg_color='transparent')
         header.pack(fill='x', pady=(0, MD.SPACING_MD))
         
+        # 标题
         title_container = ctk.CTkFrame(header, fg_color='transparent')
         title_container.pack(side='left')
         
@@ -66,9 +70,10 @@ class FileListPanel(MaterialCard):
             font=("Segoe UI Emoji", 24)
         ).pack(side='left', padx=(MD.SPACING_SM, 0))
         
-        # 加载指示器
+        # 加载指示器容器
         self.loading_container = ctk.CTkFrame(header, fg_color=MD.SURFACE_2, corner_radius=MD.RADIUS_MEDIUM)
         
+        # 加载进度条（不确定模式）
         self.loading_progress = ctk.CTkProgressBar(
             self.loading_container,
             height=6,
@@ -79,6 +84,7 @@ class FileListPanel(MaterialCard):
         )
         self.loading_progress.pack(padx=MD.SPACING_MD, pady=(MD.SPACING_SM, MD.SPACING_XS))
         
+        # 加载文本
         self.loading_label = ctk.CTkLabel(
             self.loading_container,
             text="加载中...",
@@ -92,6 +98,7 @@ class FileListPanel(MaterialCard):
         search_bar = ctk.CTkFrame(parent, fg_color='transparent')
         search_bar.pack(fill='x', pady=(0, MD.SPACING_MD))
         
+        # 搜索框
         self.search_var = tk.StringVar()
         self.search_var.trace('w', lambda *args: self._schedule_refresh())
         
@@ -103,6 +110,7 @@ class FileListPanel(MaterialCard):
         )
         search_entry.pack(side='left', fill='x', expand=True, padx=(0, MD.SPACING_SM))
         
+        # 语言筛选
         self.language_var = tk.StringVar(value="全部语言")
         self.language_var.trace('w', lambda *args: self._schedule_refresh())
         
@@ -128,6 +136,7 @@ class FileListPanel(MaterialCard):
         action_bar.grid_columnconfigure(0, weight=1)
         action_bar.grid_columnconfigure(1, weight=0)
         
+        # 左侧按钮容器
         left_buttons = ctk.CTkFrame(action_bar, fg_color='transparent')
         left_buttons.grid(row=0, column=0, sticky='w', padx=(0, MD.SPACING_SM))
         
@@ -163,6 +172,7 @@ class FileListPanel(MaterialCard):
             width=50
         ).pack(side='left')
         
+        # 右侧按钮容器
         right_buttons = ctk.CTkFrame(action_bar, fg_color='transparent')
         right_buttons.grid(row=0, column=1, sticky='e')
         
@@ -199,13 +209,16 @@ class FileListPanel(MaterialCard):
         ).pack(side='left')
     
     def _build_file_list(self, parent):
-        """构建文件列表（树状视图）"""
+        """构建文件列表（树状视图）- 性能优化版"""
+        # 列表容器
         list_container = ctk.CTkFrame(parent, fg_color=MD.SURFACE)
         list_container.pack(fill='both', expand=True, pady=(0, MD.SPACING_MD))
         
+        # 创建样式
         style = ttk.Style()
         style.theme_use('clam')
         
+        # 配置 Treeview 样式
         style.configure(
             "Material.Treeview",
             background=MD.SURFACE,
@@ -231,6 +244,7 @@ class FileListPanel(MaterialCard):
             foreground=[('selected', MD.ON_PRIMARY_CONTAINER)]
         )
         
+        # 创建 Treeview
         columns = ('status', 'language', 'size')
         self.file_tree = ttk.Treeview(
             list_container,
@@ -240,29 +254,35 @@ class FileListPanel(MaterialCard):
             selectmode='browse'
         )
         
+        # 配置列
         self.file_tree.column('#0', width=400, minwidth=200, stretch=True)
         self.file_tree.column('status', width=80, minwidth=60, anchor='center', stretch=False)
         self.file_tree.column('language', width=120, minwidth=80, anchor='center', stretch=False)
         self.file_tree.column('size', width=100, minwidth=80, anchor='e', stretch=False)
         
+        # 设置列标题
         self.file_tree.heading('#0', text='📁 文件路径', anchor='w')
         self.file_tree.heading('status', text='状态', anchor='center')
         self.file_tree.heading('language', text='语言', anchor='center')
         self.file_tree.heading('size', text='大小', anchor='e')
         
+        # 滚动条
         vsb = ttk.Scrollbar(list_container, orient="vertical", command=self.file_tree.yview)
         self.file_tree.configure(yscrollcommand=vsb.set)
         
+        # 布局
         self.file_tree.grid(row=0, column=0, sticky='nsew')
         vsb.grid(row=0, column=1, sticky='ns')
         
         list_container.grid_rowconfigure(0, weight=1)
         list_container.grid_columnconfigure(0, weight=1)
         
+        # 绑定事件
         self.file_tree.bind('<Double-Button-1>', self._on_item_double_click)
         self.file_tree.bind('<space>', self._on_space_press)
         self.file_tree.bind('<Button-1>', self._on_item_click)
         
+        # 存储节点映射
         self.item_to_path = {}
         self.path_to_item = {}
     
@@ -279,6 +299,7 @@ class FileListPanel(MaterialCard):
         )
         self.stats_label.pack(side='left')
     
+    # 事件处理
     def _add_files(self):
         """添加文件"""
         filetypes = [
@@ -301,11 +322,6 @@ class FileListPanel(MaterialCard):
         """文件添加完成回调"""
         self._show_loading(False)
         self.refresh()
-
-        if self.on_file_add_callback:
-            added_files = [f.path for f in self.file_handler.files[-count:]] if count > 0 else []
-            self.on_file_add_callback(added_files)
-
         if self.on_update_callback:
             self.on_update_callback(f"✅ 成功添加了 {count} 个文件", 'success')
     
@@ -326,11 +342,6 @@ class FileListPanel(MaterialCard):
         """文件夹添加完成回调"""
         self._show_loading(False)
         self.refresh()
-
-        if self.on_file_add_callback:
-            added_files = [f.path for f in self.file_handler.files[-count:]] if count > 0 else []
-            self.on_file_add_callback(added_files)
-
         if self.on_update_callback:
             self.on_update_callback(f"✅ 成功从文件夹添加了 {count} 个文件", 'success')
     
@@ -413,12 +424,13 @@ class FileListPanel(MaterialCard):
             collapse_recursive(item)
     
     def _schedule_refresh(self):
-        """延迟刷新（防抖）"""
+        """延迟刷新（防抖）- 优化版"""
         if self._refresh_pending:
             return
         
         self._refresh_pending = True
-        self.after(500, self._execute_refresh)
+        # 增加延迟时间，减少刷新频率
+        self.after(500, self._execute_refresh)  # 从300ms改为500ms
     
     def _execute_refresh(self):
         """执行刷新"""
@@ -484,125 +496,71 @@ class FileListPanel(MaterialCard):
         return tree_dict
     
     def _insert_tree_recursive(self, parent_item, tree_dict, prefix=""):
-        """递归插入树节点 - 收集到队列而非立即插入"""
+        """递归插入树节点"""
         for name, value in sorted(tree_dict.items()):
             if isinstance(value, dict):
-                # 文件夹节点 - 添加文件夹占位符
-                folder_index = len(self._render_queue)
-                folder_node = {
-                    'type': 'folder',
-                    'parent': parent_item,
-                    'name': name,
-                    'prefix': prefix + name + os.sep,
-                    'item_id': None  # 将在渲染时设置
-                }
-                self._render_queue.append(folder_node)
-                
-                # 递归处理子节点 - 使用索引引用父节点
-                self._insert_tree_recursive(folder_index, value, prefix + name + os.sep)
-            else:
-                # 文件节点
-                file_info = value
-                icon = "✅" if file_info.marked else "⬜"
-                
-                self._render_queue.append({
-                    'type': 'file',
-                    'parent': parent_item,
-                    'name': name,
-                    'icon': icon,
-                    'file_info': file_info
-                })
-    
-    def _display_files(self, files):
-        """显示文件列表 - 分批渲染优化版"""
-        if self._update_lock:
-            return
-        
-        self._update_lock = True
-        
-        # 取消之前的渲染任务
-        if self._render_job_id:
-            self.after_cancel(self._render_job_id)
-            self._render_job_id = None
-        
-        # 清空现有内容
-        self.file_tree.configure(selectmode='none')
-        children = self.file_tree.get_children()
-        if children:
-            self.file_tree.delete(*children)
-        
-        self.item_to_path.clear()
-        self.path_to_item.clear()
-        self._render_queue.clear()
-        
-        if not files:
-            self.file_tree.insert(
-                '',
-                'end',
-                text='  暂无文件 - 点击上方按钮添加文件或文件夹',
-                values=('', '', '')
-            )
-            self._restore_tree_state()
-            return
-        
-        # 构建渲染队列 - 一次性构建完整的队列
-        tree_structure = self._build_tree_structure(files)
-        self._insert_tree_recursive('', tree_structure)
-        
-        # 开始分批渲染
-        self._render_next_batch(0)
-    
-    def _render_next_batch(self, start_index):
-        """渲染下一批节点"""
-        end_index = min(start_index + self.BATCH_SIZE, len(self._render_queue))
-        
-        # 渲染当前批次
-        for i in range(start_index, end_index):
-            item_data = self._render_queue[i]
-            
-            # 解析父节点引用
-            parent = item_data['parent']
-            if isinstance(parent, int):
-                # 如果parent是索引,获取对应的item_id
-                if parent < len(self._render_queue) and self._render_queue[parent].get('item_id'):
-                    parent = self._render_queue[parent]['item_id']
-                else:
-                    parent = ''
-            
-            if item_data['type'] == 'folder':
                 folder_item = self.file_tree.insert(
-                    parent,
+                    parent_item,
                     'end',
-                    text=f"📁 {item_data['name']}",
+                    text=f"📁 {name}",
                     values=('', '', ''),
                     open=True
                 )
-                # 保存文件夹项目ID,以便子节点使用
-                item_data['item_id'] = folder_item
-            
-            elif item_data['type'] == 'file':
-                file_info = item_data['file_info']
+                self._insert_tree_recursive(folder_item, value, prefix + name + os.sep)
+            else:
+                file_info = value
+                icon = "✅" if file_info.marked else "⬜"
+                
                 file_item = self.file_tree.insert(
-                    parent,
+                    parent_item,
                     'end',
-                    text=f"📄 {item_data['name']}",
-                    values=(item_data['icon'], file_info.language, format_size(file_info.size)),
+                    text=f"📄 {name}",
+                    values=(icon, file_info.language, format_size(file_info.size)),
                     tags=('file',)
                 )
                 
                 self.item_to_path[file_item] = file_info.path
                 self.path_to_item[file_info.path] = file_item
+    
+    def _display_files(self, files):
+        """显示文件列表 - 性能优化版（消除撕裂）"""
+        # 防止重复更新
+        if self._update_lock:
+            return
         
-        # 如果还有未渲染的节点，继续下一批
-        if end_index < len(self._render_queue):
-            self._render_job_id = self.after(
-                self.RENDER_DELAY,
-                lambda: self._render_next_batch(end_index)
-            )
-        else:
-            # 渲染完成
-            self._render_queue.clear()
-            self._restore_tree_state()
+        self._update_lock = True
+        
+        try:
+            # 1. 暂停UI更新
+            self.file_tree.configure(selectmode='none')
+            
+            # 2. 批量删除（使用detach而非delete可以更快）
+            children = self.file_tree.get_children()
+            if children:
+                self.file_tree.delete(*children)  # 批量删除
+            
+            self.item_to_path.clear()
+            self.path_to_item.clear()
+            
+            if not files:
+                # 空状态
+                self.file_tree.insert(
+                    '',
+                    'end',
+                    text='  暂无文件 - 点击上方按钮添加文件或文件夹',
+                    values=('', '', '')
+                )
+            else:
+                # 3. 构建并批量插入
+                tree_structure = self._build_tree_structure(files)
+                self._insert_tree_recursive('', tree_structure)
+            
+            # 4. 强制更新一次UI
+            self.file_tree.update_idletasks()
+            
+        finally:
+            # 5. 延迟恢复选择模式，确保UI完全更新
+            self.after(10, self._restore_tree_state)
     
     def _restore_tree_state(self):
         """恢复树状态"""
@@ -638,6 +596,7 @@ class FileListPanel(MaterialCard):
         """刷新显示"""
         self._filter_files()
         
+        # 更新统计
         stats = self.file_handler.get_stats()
         self.stats_label.configure(
             text=f"📊 {stats['marked']}/{stats['total']} 个文件已选中  •  "
@@ -648,7 +607,3 @@ class FileListPanel(MaterialCard):
     def set_update_callback(self, callback):
         """设置更新回调"""
         self.on_update_callback = callback
-
-    def set_file_add_callback(self, callback):
-        """设置文件添加回调"""
-        self.on_file_add_callback = callback

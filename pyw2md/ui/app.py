@@ -136,9 +136,9 @@ class MaterialApp(AppBase):
                 self.file_panel.drop_target_register(DND_FILES)
                 self.file_panel.dnd_bind('<<Drop>>', self._on_drop)
             
-            print("✅ 拖放功能已启用")
+            print("拖放功能已启用")
         except Exception as e:
-            print(f"⚠️ 拖放功能初始化失败: {e}")
+            print(f"警告: 拖放功能初始化失败: {e}")
     
     def _show_drag_drop_hint(self):
         """显示拖放功能提示"""
@@ -199,10 +199,10 @@ class MaterialApp(AppBase):
             messages.append(f"文件夹中的 {added_folders} 个文件")
         
         if messages:
-            msg = f"✅ 已添加: {', '.join(messages)}"
+            msg = f"已添加: {', '.join(messages)}"
             self._show_toast(msg, 'success')
         else:
-            self._show_toast("⚠️ 没有找到支持的文件", 'warning')
+            self._show_toast("没有找到支持的文件", 'warning')
     
     def _parse_drop_files(self, data):
         """解析拖放的文件路径"""
@@ -247,7 +247,7 @@ class MaterialApp(AppBase):
             messages.append(f"{deleted_count} 个文件已删除")
         
         if messages:
-            msg = "🔔 检测到文件变化: " + ", ".join(messages)
+            msg = "检测到文件变化: " + ", ".join(messages)
             
             if not hasattr(self, 'notification_bar') or not self.notification_bar.winfo_exists():
                 self._create_notification_bar(msg)
@@ -279,7 +279,7 @@ class MaterialApp(AppBase):
         
         ctk.CTkButton(
             button_frame,
-            text="🔄 刷新",
+            text="刷新",
             command=self._refresh_changed_files,
             fg_color=MD.PRIMARY,
             hover_color=MD.PRIMARY_CONTAINER,
@@ -289,7 +289,7 @@ class MaterialApp(AppBase):
         
         ctk.CTkButton(
             button_frame,
-            text="✕",
+            text="关闭",
             command=self._close_notification,
             fg_color='transparent',
             hover_color=MD.SURFACE_2,
@@ -319,7 +319,7 @@ class MaterialApp(AppBase):
         
         self._close_notification()
         
-        msg = f"✅ 已刷新: {modified_count} 个修改, {deleted_count} 个删除"
+        msg = f"已刷新: {modified_count} 个修改, {deleted_count} 个删除"
         self._show_toast(msg, 'success')
     
     def _close_notification(self):
@@ -396,12 +396,12 @@ class MaterialApp(AppBase):
             ConversionPreviewDialog(self, data, template, max_files)
         
         elif preview_type == 'warning':
-            self._show_toast(f"⚠️ {data}", 'warning')
+            self._show_toast(f"警告: {data}", 'warning')
     
     def _on_convert(self, action: str, data):
         """转换回调"""
         if action == 'warning':
-            self._show_toast(f"⚠️ {data}", 'warning')
+            self._show_toast(f"警告: {data}", 'warning')
             return
         
         if action == 'start':
@@ -440,13 +440,13 @@ class MaterialApp(AppBase):
         self.after(1000, self.control_panel.hide_progress)
         
         if result['success']:
-            self._show_toast(f"✅ {result['message']}", 'success')
+            self._show_toast(f"成功: {result['message']}", 'success')
             messagebox.showinfo(
                 "转换完成",
                 f"{result['message']}\n\n保存位置: {output_file}"
             )
         else:
-            self._show_toast(f"❌ {result['message']}", 'error')
+            self._show_toast(f"错误: {result['message']}", 'error')
             messagebox.showerror("转换失败", result['message'])
     
     def _show_toast(self, message: str, type: str = 'info'):
