@@ -83,7 +83,7 @@ class Converter:
         """设置基准路径"""
         self.base_path = path
 
-        def convert_file(self, file_info: FileInfo) -> str:
+    def convert_file(self, file_info: FileInfo) -> str:
             """转换单个文件 - 优化字符串拼接"""
             try:
                 # 读取文件内容（使用 with 自动关闭）
