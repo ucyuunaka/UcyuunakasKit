@@ -67,8 +67,8 @@ class FileListPanel(MaterialCard):
         
         ctk.CTkLabel(
             title_container,
-            text="📁",
-            font=("Segoe UI Emoji", 24)
+            text="📂",
+            font=("Segoe UI Emoji", 16)
         ).pack(side='left', padx=(MD.SPACING_SM, 0))
         
         # 加载指示器容器
@@ -226,8 +226,8 @@ class FileListPanel(MaterialCard):
             foreground=MD.ON_SURFACE,
             fieldbackground=MD.SURFACE,
             borderwidth=0,
-            font=MD.FONT_BODY,
-            rowheight=32
+            font=MD.FONT_LABEL,
+            rowheight=24
         )
         
         style.configure(
@@ -256,13 +256,13 @@ class FileListPanel(MaterialCard):
         )
         
         # 配置列
-        self.file_tree.column('#0', width=400, minwidth=200, stretch=True)
-        self.file_tree.column('status', width=80, minwidth=60, anchor='center', stretch=False)
-        self.file_tree.column('language', width=120, minwidth=80, anchor='center', stretch=False)
-        self.file_tree.column('size', width=100, minwidth=80, anchor='e', stretch=False)
+        self.file_tree.column('#0', width=350, minwidth=180, stretch=True)
+        self.file_tree.column('status', width=70, minwidth=50, anchor='center', stretch=False)
+        self.file_tree.column('language', width=100, minwidth=70, anchor='center', stretch=False)
+        self.file_tree.column('size', width=85, minwidth=70, anchor='e', stretch=False)
         
         # 设置列标题
-        self.file_tree.heading('#0', text='📁 文件路径', anchor='w')
+        self.file_tree.heading('#0', text='📂 文件路径', anchor='w')
         self.file_tree.heading('status', text='状态', anchor='center')
         self.file_tree.heading('language', text='语言', anchor='center')
         self.file_tree.heading('size', text='大小', anchor='e')
@@ -515,7 +515,7 @@ class FileListPanel(MaterialCard):
                 folder_item = self.file_tree.insert(
                     parent_item,
                     'end',
-                    text=f"📁 {name}",
+                    text=f"▸ {name}",
                     values=('', '', ''),
                     open=True
                 )
@@ -527,7 +527,7 @@ class FileListPanel(MaterialCard):
                 file_item = self.file_tree.insert(
                     parent_item,
                     'end',
-                    text=f"📄 {name}",
+                    text=f"• {name}",
                     values=(icon, file_info.language, format_size(file_info.size)),
                     tags=('file',)
                 )
