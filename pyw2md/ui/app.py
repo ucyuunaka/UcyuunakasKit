@@ -148,7 +148,7 @@ class MaterialApp(AppBase):
             font=MD.FONT_LABEL,
             text_color=MD.WARNING
         )
-        hint.pack(side='top', pady=MD.SPACING_SM)
+        hint.grid(row=0, column=0, columnspan=2, pady=MD.SPACING_SM, sticky='ew')
         self.after(5000, hint.destroy)
     
     def _on_drop(self, event):
@@ -261,22 +261,25 @@ class MaterialApp(AppBase):
             fg_color=MD.WARNING_CONTAINER,
             height=50
         )
-        self.notification_bar.pack(side='top', fill='x', padx=MD.SPACING_LG, pady=(MD.SPACING_LG, 0))
-        
+        self.notification_bar.grid(row=0, column=0, columnspan=2, sticky='ew',
+                                   padx=MD.SPACING_LG, pady=(MD.SPACING_LG, 0))
+
         content = ctk.CTkFrame(self.notification_bar, fg_color='transparent')
-        content.pack(fill='both', expand=True, padx=MD.SPACING_MD, pady=MD.SPACING_SM)
-        
+        content.grid(row=0, column=0, sticky='nsew', padx=MD.SPACING_MD, pady=MD.SPACING_SM)
+        self.notification_bar.grid_columnconfigure(0, weight=1)
+        self.notification_bar.grid_rowconfigure(0, weight=1)
+
         self.notification_label = ctk.CTkLabel(
             content,
             text=message,
             font=MD.FONT_BODY,
             text_color=MD.ON_SURFACE
         )
-        self.notification_label.pack(side='left', padx=(0, MD.SPACING_MD))
-        
+        self.notification_label.grid(row=0, column=0, sticky='w', padx=(0, MD.SPACING_MD))
+
         button_frame = ctk.CTkFrame(content, fg_color='transparent')
-        button_frame.pack(side='right')
-        
+        button_frame.grid(row=0, column=1, sticky='e')
+
         ctk.CTkButton(
             button_frame,
             text="刷新",
@@ -285,8 +288,8 @@ class MaterialApp(AppBase):
             hover_color=MD.PRIMARY_CONTAINER,
             width=80,
             height=32
-        ).pack(side='left', padx=(0, MD.SPACING_SM))
-        
+        ).grid(row=0, column=0, padx=(0, MD.SPACING_SM))
+
         ctk.CTkButton(
             button_frame,
             text="关闭",
@@ -295,7 +298,7 @@ class MaterialApp(AppBase):
             hover_color=MD.SURFACE_2,
             width=32,
             height=32
-        ).pack(side='left')
+        ).grid(row=0, column=1)
     
     def _refresh_changed_files(self):
         """刷新变化的文件"""
@@ -335,6 +338,7 @@ class MaterialApp(AppBase):
         self.grid_columnconfigure(0, weight=3)
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=0)  # 为toast通知预留空间
         
         self.file_panel = FileListPanel(self, self.file_handler)
         self.file_panel.grid(row=0, column=0, sticky='nsew', 
@@ -457,12 +461,12 @@ class MaterialApp(AppBase):
             'warning': MD.WARNING,
             'info': MD.INFO
         }
-        
+
         color = colors.get(type, MD.INFO)
-        
+
         if self.toast_label:
             self.toast_label.destroy()
-        
+
         self.toast_label = ctk.CTkLabel(
             self,
             text=message,
@@ -472,9 +476,11 @@ class MaterialApp(AppBase):
             corner_radius=MD.RADIUS_MEDIUM,
             height=48
         )
-        
-        self.toast_label.place(relx=0.5, rely=0.92, anchor='center')
-        
+
+        # 使用grid布局，但需要特殊处理，因为toast应该浮动在其他内容之上
+        self.toast_label.grid(row=1, column=0, columnspan=2, pady=(0, MD.SPACING_LG), sticky='ew')
+        self.toast_label.lift()  # 确保显示在最上层
+
         self.after(3000, lambda: self.toast_label.destroy() if self.toast_label else None)
     
     def _load_saved_state(self):
