@@ -6,17 +6,17 @@ import customtkinter as ctk
 import tkinter as tk
 from tkinter import filedialog, ttk
 from config.theme import MD
-from ui.widgets.material_card import MaterialCard, MaterialButton, MaterialEntry
+from ui.widgets.material_card import Card, Btn
 from core.file_handler import FileHandler, get_all_languages, format_size
 import os
 from pathlib import Path
 import threading
 
-class FileListPanel(MaterialCard):
+class FileListPanel(Card):
     """文件列表面板"""
     
     def __init__(self, master, file_handler: FileHandler, **kwargs):
-        super().__init__(master, elevation=1, **kwargs)
+        super().__init__(master, **kwargs)
         
         self.file_handler = file_handler
         self.on_update_callback = None
@@ -32,7 +32,7 @@ class FileListPanel(MaterialCard):
         """构建UI"""
         # 主容器
         container = ctk.CTkFrame(self, fg_color='transparent')
-        container.pack(fill='both', expand=True, padx=MD.SPACING_MD, pady=MD.SPACING_MD)
+        container.pack(fill='both', expand=True, padx=MD.PAD_M, pady=MD.PAD_M)
         
         # 标题栏
         self._build_header(container)
@@ -52,7 +52,7 @@ class FileListPanel(MaterialCard):
     def _build_header(self, parent):
         """构建标题栏"""
         header = ctk.CTkFrame(parent, fg_color='transparent')
-        header.pack(fill='x', pady=(0, MD.SPACING_MD))
+        header.pack(fill='x', pady=(0, MD.PAD_M))
         
         # 标题
         title_container = ctk.CTkFrame(header, fg_color='transparent')
@@ -69,10 +69,10 @@ class FileListPanel(MaterialCard):
             title_container,
             text="📂",
             font=("Segoe UI Emoji", 16)
-        ).pack(side='left', padx=(MD.SPACING_SM, 0))
+        ).pack(side='left', padx=(MD.PAD_S, 0))
         
         # 加载指示器容器
-        self.loading_container = ctk.CTkFrame(header, fg_color=MD.SURFACE_2, corner_radius=MD.RADIUS_MEDIUM)
+        self.loading_container = ctk.CTkFrame(header, fg_color=MD.BG_SURFACE, corner_radius=MD.RADIUS)
         
         # 加载进度条（不确定模式）
         self.loading_progress = ctk.CTkProgressBar(
@@ -83,7 +83,7 @@ class FileListPanel(MaterialCard):
             progress_color=MD.PRIMARY,
             mode='indeterminate'
         )
-        self.loading_progress.pack(padx=MD.SPACING_MD, pady=(MD.SPACING_SM, MD.SPACING_XS))
+        self.loading_progress.pack(padx=MD.PAD_M, pady=(MD.PAD_S, MD.PAD_S))
         
         # 加载文本
         self.loading_label = ctk.CTkLabel(
@@ -92,24 +92,27 @@ class FileListPanel(MaterialCard):
             font=MD.FONT_BODY,
             text_color=MD.PRIMARY
         )
-        self.loading_label.pack(padx=MD.SPACING_MD, pady=(0, MD.SPACING_SM))
+        self.loading_label.pack(padx=MD.PAD_M, pady=(0, MD.PAD_S))
     
     def _build_search_bar(self, parent):
         """构建搜索栏"""
         search_bar = ctk.CTkFrame(parent, fg_color='transparent')
-        search_bar.pack(fill='x', pady=(0, MD.SPACING_MD))
+        search_bar.pack(fill='x', pady=(0, MD.PAD_M))
         
         # 搜索框
         self.search_var = tk.StringVar()
         self.search_var.trace('w', lambda *args: self._schedule_refresh())
         
-        search_entry = MaterialEntry(
+        search_entry = ctk.CTkEntry(
             search_bar,
             textvariable=self.search_var,
             placeholder_text="🔍 搜索文件名...",
-            width=300
+            width=300,
+            fg_color=MD.BG_SURFACE,
+            border_color=MD.BORDER,
+            corner_radius=MD.RADIUS
         )
-        search_entry.pack(side='left', fill='x', expand=True, padx=(0, MD.SPACING_SM))
+        search_entry.pack(side='left', fill='x', expand=True, padx=(0, MD.PAD_S))
         
         # 语言筛选
         self.language_var = tk.StringVar(value="全部语言")
@@ -122,7 +125,7 @@ class FileListPanel(MaterialCard):
             variable=self.language_var,
             state='readonly',
             width=150,
-            fg_color=MD.SURFACE_2,
+            fg_color=MD.BG_SURFACE,
             button_color=MD.PRIMARY,
             border_color=MD.OUTLINE,
             font=MD.FONT_BODY
@@ -132,44 +135,44 @@ class FileListPanel(MaterialCard):
     def _build_action_bar(self, parent):
         """构建操作按钮栏"""
         action_bar = ctk.CTkFrame(parent, fg_color='transparent')
-        action_bar.pack(fill='x', pady=(0, MD.SPACING_MD))
+        action_bar.pack(fill='x', pady=(0, MD.PAD_M))
         
         action_bar.grid_columnconfigure(0, weight=1)
         action_bar.grid_columnconfigure(1, weight=0)
         
         # 左侧按钮容器
         left_buttons = ctk.CTkFrame(action_bar, fg_color='transparent')
-        left_buttons.grid(row=0, column=0, sticky='w', padx=(0, MD.SPACING_SM))
+        left_buttons.grid(row=0, column=0, sticky='w', padx=(0, MD.PAD_S))
         
-        MaterialButton(
+        Btn(
             left_buttons,
+            kind='primary',
             text="➕ 文件",
             command=self._add_files,
-            style='filled',
             width=100
-        ).pack(side='left', padx=(0, MD.SPACING_SM))
+        ).pack(side='left', padx=(0, MD.PAD_S))
         
-        MaterialButton(
+        Btn(
             left_buttons,
-            text="📁 文件夹",
+            kind='primary',
+            text="文件夹",
             command=self._add_folder,
-            style='tonal',
             width=100
-        ).pack(side='left', padx=(0, MD.SPACING_SM))
+        ).pack(side='left', padx=(0, MD.PAD_S))
         
-        MaterialButton(
+        Btn(
             left_buttons,
-            text="🔄",
+            kind='normal',
+            text="刷新",
             command=self._refresh_files,
-            style='outlined',
             width=50
-        ).pack(side='left', padx=(0, MD.SPACING_SM))
+        ).pack(side='left', padx=(0, MD.PAD_S))
         
-        MaterialButton(
+        Btn(
             left_buttons,
-            text="🗑️",
+            kind='danger',
+            text="清除所有",
             command=self._clear_files,
-            style='error',
             width=50
         ).pack(side='left')
         
@@ -177,35 +180,35 @@ class FileListPanel(MaterialCard):
         right_buttons = ctk.CTkFrame(action_bar, fg_color='transparent')
         right_buttons.grid(row=0, column=1, sticky='e')
         
-        MaterialButton(
+        Btn(
             right_buttons,
+            kind='normal',
             text="全选",
             command=lambda: self._mark_all(True),
-            style='outlined',
             width=60
-        ).pack(side='left', padx=(0, MD.SPACING_SM))
+        ).pack(side='left', padx=(0, MD.PAD_S))
         
-        MaterialButton(
+        Btn(
             right_buttons,
+            kind='normal',
             text="全不选",
             command=lambda: self._mark_all(False),
-            style='outlined',
             width=70
-        ).pack(side='left', padx=(0, MD.SPACING_SM))
+        ).pack(side='left', padx=(0, MD.PAD_S))
         
-        MaterialButton(
+        Btn(
             right_buttons,
+            kind='normal',
             text="展开",
             command=self._expand_all,
-            style='outlined',
             width=60
-        ).pack(side='left', padx=(0, MD.SPACING_SM))
+        ).pack(side='left', padx=(0, MD.PAD_S))
         
-        MaterialButton(
+        Btn(
             right_buttons,
+            kind='normal',
             text="折叠",
             command=self._collapse_all,
-            style='outlined',
             width=60
         ).pack(side='left')
     
@@ -213,7 +216,7 @@ class FileListPanel(MaterialCard):
         """构建文件列表（树状视图）- 性能优化版"""
         # 列表容器
         list_container = ctk.CTkFrame(parent, fg_color=MD.SURFACE)
-        list_container.pack(fill='both', expand=True, pady=(0, MD.SPACING_MD))
+        list_container.pack(fill='both', expand=True, pady=(0, MD.PAD_M))
         
         # 创建样式
         style = ttk.Style()
@@ -221,48 +224,48 @@ class FileListPanel(MaterialCard):
         
         # 配置 Treeview 样式
         style.configure(
-            "Material.Treeview",
-            background=MD.SURFACE,
-            foreground=MD.ON_SURFACE,
-            fieldbackground=MD.SURFACE,
+            "Compact.Treeview",
+            background=MD.BG_SURFACE,
+            foreground=MD.TEXT_PRIMARY,
+            fieldbackground=MD.BG_SURFACE,
             borderwidth=0,
-            font=MD.FONT_LABEL,
-            rowheight=24
+            font=MD.FONT_UI,
+            rowheight=18
         )
         
         style.configure(
-            "Material.Treeview.Heading",
-            background=MD.SURFACE_2,
-            foreground=MD.ON_SURFACE,
+            "Compact.Treeview.Heading",
+            background=MD.BG_ELEVATED,
+            foreground=MD.TEXT_PRIMARY,
             borderwidth=1,
             relief="flat",
             font=MD.FONT_TITLE
         )
-        
+
         style.map(
-            "Material.Treeview",
-            background=[('selected', MD.PRIMARY_CONTAINER)],
-            foreground=[('selected', MD.ON_PRIMARY_CONTAINER)]
+            "Compact.Treeview",
+            background=[('selected', MD.BG_ELEVATED)],
+            foreground=[('selected', MD.TEXT_PRIMARY)]
         )
-        
+
         # 创建 Treeview
         columns = ('status', 'language', 'size')
         self.file_tree = ttk.Treeview(
             list_container,
             columns=columns,
             show='tree headings',
-            style="Material.Treeview",
+            style="Compact.Treeview",
             selectmode='browse'
         )
         
         # 配置列
-        self.file_tree.column('#0', width=350, minwidth=180, stretch=True)
-        self.file_tree.column('status', width=70, minwidth=50, anchor='center', stretch=False)
-        self.file_tree.column('language', width=100, minwidth=70, anchor='center', stretch=False)
-        self.file_tree.column('size', width=85, minwidth=70, anchor='e', stretch=False)
-        
+        self.file_tree.column('#0', width=400, minwidth=180, stretch=True)
+        self.file_tree.column('status', width=50, minwidth=50, anchor='center', stretch=False)
+        self.file_tree.column('language', width=80, minwidth=70, anchor='center', stretch=False)
+        self.file_tree.column('size', width=70, minwidth=70, anchor='e', stretch=False)
+
         # 设置列标题
-        self.file_tree.heading('#0', text='📂 文件路径', anchor='w')
+        self.file_tree.heading('#0', text='[+] 文件路径', anchor='w')
         self.file_tree.heading('status', text='状态', anchor='center')
         self.file_tree.heading('language', text='语言', anchor='center')
         self.file_tree.heading('size', text='大小', anchor='e')
@@ -515,19 +518,19 @@ class FileListPanel(MaterialCard):
                 folder_item = self.file_tree.insert(
                     parent_item,
                     'end',
-                    text=f"▸ {name}",
+                    text=f"[+] {name}",
                     values=('', '', ''),
                     open=True
                 )
                 self._insert_tree_recursive(folder_item, value, prefix + name + os.sep)
             else:
                 file_info = value
-                icon = "✅" if file_info.marked else "⬜"
-                
+                icon = "[x]" if file_info.marked else "[ ]"
+
                 file_item = self.file_tree.insert(
                     parent_item,
                     'end',
-                    text=f"• {name}",
+                    text=f" {name}",
                     values=(icon, file_info.language, format_size(file_info.size)),
                     tags=('file',)
                 )
@@ -596,7 +599,7 @@ class FileListPanel(MaterialCard):
         self._loading = show
         
         if show:
-            self.loading_container.pack(side='right', padx=MD.SPACING_MD)
+            self.loading_container.pack(side='right', padx=MD.PAD_M)
             self.loading_progress.set(0)
             self._animate_loading()
         else:

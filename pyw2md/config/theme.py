@@ -1,91 +1,75 @@
 """
-Material Design 3 主题配置
-基于 Material You 设计系统
+简化主题 - Catppuccin Mocha启发
+实用主题 - 高对比度深色
 """
 
-class MaterialTheme:
-    """Material Design 3 颜色系统"""
+class MD:
+    # 背景（3级足够）- 添加向后兼容别名
+    BG_MAIN = "#1E1E2E"      # 主背景
+    BG_SURFACE = "#2A2A3A"   # 卡片
+    BG_ELEVATED = "#363650"  # 高亮/悬停
+    BACKGROUND = "#1E1E2E"   # 向后兼容
 
-    # 主色调 - 紫蓝色系
-    PRIMARY = "#6750A4"
-    PRIMARY_CONTAINER = "#EADDFF"
-    ON_PRIMARY = "#FFFFFF"
-    ON_PRIMARY_CONTAINER = "#21005E"
+    # 文字（2级足够）
+    TEXT_PRIMARY = "#CDD6F4"   # 主文字
+    TEXT_SECONDARY = "#BAC2DE" # 次要文字
 
-    # 次要色 - 粉紫色系
-    SECONDARY = "#625B71"
-    SECONDARY_CONTAINER = "#E8DEF8"
-    ON_SECONDARY = "#FFFFFF"
-    ON_SECONDARY_CONTAINER = "#1E192B"
+    # 强调色（3个足够）
+    ACCENT_BLUE = "#89B4FA"    # 主操作
+    ACCENT_GREEN = "#A6E3A1"   # 成功
+    ACCENT_RED = "#F38BA8"     # 错误/危险
+    ACCENT_YELLOW = "#F9E2AF"  # 警告
 
-    # 第三色 - 暖红色系
-    TERTIARY = "#7D5260"
-    TERTIARY_CONTAINER = "#FFD8E4"
-    ON_TERTIARY = "#FFFFFF"
-    ON_TERTIARY_CONTAINER = "#370B1E"
+    # 别名（向后兼容）
+    PRIMARY = "#89B4FA"        # 主色
+    SUCCESS = "#A6E3A1"        # 成功色
+    ERROR = "#F38BA8"          # 错误色
 
-    # 错误色
-    ERROR = "#BA1A1A"
-    ERROR_CONTAINER = "#FFDAD6"
-    ON_ERROR = "#FFFFFF"
-    ON_ERROR_CONTAINER = "#410002"
+    # 边框
+    BORDER = "#45475A"
 
-    # 背景色 - 深色主题
-    BACKGROUND = "#1C1B1F"
-    ON_BACKGROUND = "#E6E1E5"
+    # 间距（2个足够）
+    PAD_S = 8
+    PAD_M = 12
 
-    # 表面色
-    SURFACE = "#1C1B1F"
-    SURFACE_1 = "#2B2930"  # 高程1
-    SURFACE_2 = "#322F37"  # 高程2
-    SURFACE_3 = "#38353E"  # 高程3
-    SURFACE_4 = "#3A3740"  # 高程4
-    SURFACE_5 = "#403D46"  # 高程5
-
-    ON_SURFACE = "#E6E1E5"
-    ON_SURFACE_VARIANT = "#CAC4D0"
-
-    # 轮廓色
-    OUTLINE = "#938F99"
-    OUTLINE_VARIANT = "#49454F"
-
-    # 成功色（扩展）
-    SUCCESS = "#4CAF50"
-    SUCCESS_CONTAINER = "#C8E6C9"
-
-    # 警告色（扩展）
-    WARNING = "#FF9800"
-    WARNING_CONTAINER = "#FFE0B2"
-
-    # 信息色（扩展）
-    INFO = "#2196F3"
-    INFO_CONTAINER = "#BBDEFB"
+    # 圆角（1个足够）
+    RADIUS = 4
 
     # 字体
-    FONT_FAMILY = "Segoe UI Variable"
-    FONT_DISPLAY = (FONT_FAMILY, 28, "bold")
-    FONT_HEADLINE = (FONT_FAMILY, 24, "bold")
-    FONT_TITLE = (FONT_FAMILY, 16, "bold")
-    FONT_BODY_LARGE = (FONT_FAMILY, 14)
-    FONT_BODY = (FONT_FAMILY, 12)
-    FONT_LABEL = (FONT_FAMILY, 11)
-    FONT_MONO = ("Consolas", 11)
+    FONT_MONO = ("Cascadia Code", 9)  # 更现代的等宽字体
+    FONT_UI = ("Segoe UI", 9)
+    FONT_TITLE = ("Segoe UI Semibold", 10)
 
-    # 圆角
-    RADIUS_SMALL = 8
-    RADIUS_MEDIUM = 12
-    RADIUS_LARGE = 16
-    RADIUS_XLARGE = 28
+    # Material Design 向后兼容性 - 添加缺失的颜色常量
+    ON_SURFACE = "#CDD6F4"      # 表面文字色
+    ON_SURFACE_VARIANT = "#BAC2DE"  # 表面变体文字色
+    ON_PRIMARY = "#FFFFFF"      # 主色文字
+    SURFACE = "#2A2A3A"         # 表面（通用）
+    SURFACE_1 = "#2A2A3A"       # 表面1
+    SURFACE_2 = "#363650"       # 表面2
+    FONT_HEADLINE = ("Segoe UI Semibold", 12)  # 标题字体
+    FONT_BODY = ("Segoe UI", 10)    # 正文字体
+    FONT_LABEL = ("Segoe UI", 9)    # 标签字体
+    FONT_MONO = ("Cascadia Code", 9)  # 等宽字体
 
-    # 间距
-    SPACING_XS = 4
-    SPACING_SM = 8
-    SPACING_MD = 16
-    SPACING_LG = 24
-    SPACING_XL = 32
+    # 警告颜色
+    WARNING = "#FAB387"         # 警告色
+    WARNING_CONTAINER = "#7C2D12"  # 警告容器
 
-    # 阴影（模拟）
-    SHADOW_COLOR = "#00000040"
+    # 主色容器
+    PRIMARY_CONTAINER = "#1E40AF"   # 主色容器
 
-# 快捷访问
-MD = MaterialTheme
+    # 轮廓色
+    OUTLINE = "#797979"         # 轮廓色
+
+    # 信息色
+    INFO = "#74C7EC"            # 信息色
+
+    # 圆角大小
+    RADIUS_MEDIUM = 8           # 中等圆角
+
+    # 间距常量（向后兼容）
+    SPACING_XS = 4              # 极小间距
+
+# 快捷访问保持不变
+MD = MD

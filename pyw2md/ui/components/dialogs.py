@@ -4,7 +4,7 @@
 
 import customtkinter as ctk
 from config.theme import MD
-from ui.widgets.material_card import MaterialButton
+from ui.widgets.material_card import Btn
 from core.converter import preview_template, Converter
 from core.file_handler import FileInfo
 
@@ -16,7 +16,7 @@ class PreviewDialog(ctk.CTkToplevel):
         
         self.title(title)
         self.geometry(f"{width}x{height}")
-        self.configure(fg_color=MD.BACKGROUND)
+        self.configure(fg_color=MD.BG_MAIN)
         
         # 居中显示
         self.update_idletasks()
@@ -31,11 +31,11 @@ class PreviewDialog(ctk.CTkToplevel):
     def _build_header(self, title: str, subtitle: str = ""):
         """构建头部"""
         header = ctk.CTkFrame(self, fg_color=MD.SURFACE_1, height=80)
-        header.pack(fill='x', padx=MD.SPACING_LG, pady=MD.SPACING_LG)
+        header.pack(fill='x', padx=MD.PAD_M, pady=MD.PAD_M)
         header.pack_propagate(False)
         
         header_content = ctk.CTkFrame(header, fg_color='transparent')
-        header_content.pack(fill='both', expand=True, padx=MD.SPACING_MD, pady=MD.SPACING_MD)
+        header_content.pack(fill='both', expand=True, padx=MD.PAD_M, pady=MD.PAD_M)
         
         ctk.CTkLabel(
             header_content,
@@ -57,7 +57,7 @@ class PreviewDialog(ctk.CTkToplevel):
     def _build_content_area(self):
         """构建内容区域"""
         content = ctk.CTkFrame(self, fg_color=MD.SURFACE)
-        content.pack(fill='both', expand=True, padx=MD.SPACING_LG, pady=(0, MD.SPACING_LG))
+        content.pack(fill='both', expand=True, padx=MD.PAD_M, pady=(0, MD.PAD_M))
         
         textbox = ctk.CTkTextbox(
             content,
@@ -66,20 +66,20 @@ class PreviewDialog(ctk.CTkToplevel):
             text_color=MD.ON_SURFACE,
             wrap='none'
         )
-        textbox.pack(fill='both', expand=True, padx=MD.SPACING_MD, pady=MD.SPACING_MD)
+        textbox.pack(fill='both', expand=True, padx=MD.PAD_M, pady=MD.PAD_M)
         
         return textbox
     
     def _build_footer(self):
         """构建底部按钮"""
         footer = ctk.CTkFrame(self, fg_color='transparent')
-        footer.pack(fill='x', padx=MD.SPACING_LG, pady=(0, MD.SPACING_LG))
+        footer.pack(fill='x', padx=MD.PAD_M, pady=(0, MD.PAD_M))
         
-        MaterialButton(
+        Btn(
             footer,
+            kind='normal',
             text="关闭",
             command=self.destroy,
-            style='text',
             width=120
         ).pack(side='right')
         

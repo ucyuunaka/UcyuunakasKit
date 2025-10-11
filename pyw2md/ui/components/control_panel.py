@@ -5,15 +5,15 @@
 import customtkinter as ctk
 import tkinter as tk
 from config.theme import MD
-from ui.widgets.material_card import MaterialCard, MaterialButton, StatCard
+from ui.widgets.material_card import Card, Btn
 from core.converter import get_template_names, Converter
 from core.file_handler import FileHandler, format_size
 
-class ControlPanel(MaterialCard):
+class ControlPanel(Card):
     """控制面板"""
-    
+
     def __init__(self, master, file_handler: FileHandler, **kwargs):
-        super().__init__(master, elevation=1, **kwargs)
+        super().__init__(master, **kwargs)
         
         self.file_handler = file_handler
         self.converter = Converter()
@@ -27,12 +27,10 @@ class ControlPanel(MaterialCard):
         """构建UI - 使用可滚动框架"""
         # 创建可滚动容器以避免内容被遮挡
         scrollable_container = ctk.CTkScrollableFrame(
-            self, 
-            fg_color='transparent',
-            scrollbar_button_color=MD.PRIMARY,
-            scrollbar_button_hover_color=MD.PRIMARY_CONTAINER
+            self,
+            fg_color='transparent'
         )
-        scrollable_container.pack(fill='both', expand=True, padx=MD.SPACING_MD, pady=MD.SPACING_MD)
+        scrollable_container.pack(fill='both', expand=True, padx=MD.PAD_M, pady=MD.PAD_M)
         
         # 标题
         self._build_header(scrollable_container)
@@ -52,7 +50,7 @@ class ControlPanel(MaterialCard):
     def _build_header(self, parent):
         """构建标题"""
         header = ctk.CTkFrame(parent, fg_color='transparent')
-        header.pack(fill='x', pady=(0, MD.SPACING_LG))
+        header.pack(fill='x', pady=(0, MD.PAD_M))
         
         title_container = ctk.CTkFrame(header, fg_color='transparent')
         title_container.pack(anchor='w')
@@ -68,24 +66,24 @@ class ControlPanel(MaterialCard):
             title_container,
             text="⚙️",
             font=("Segoe UI Emoji", 24)
-        ).pack(side='left', padx=(MD.SPACING_SM, 0))
+        ).pack(side='left', padx=(MD.PAD_S, 0))
     
     def _build_template_section(self, parent):
         """构建模板选择区域"""
-        section = MaterialCard(parent, elevation=0, fg_color=MD.SURFACE_2)
-        section.pack(fill='x', pady=(0, MD.SPACING_MD))
+        section = Card(parent, fg_color=MD.BG_SURFACE)
+        section.pack(fill='x', pady=(0, MD.PAD_M))
         
         section_container = ctk.CTkFrame(section, fg_color='transparent')
-        section_container.pack(fill='both', padx=MD.SPACING_MD, pady=MD.SPACING_MD)
+        section_container.pack(fill='both', padx=MD.PAD_M, pady=MD.PAD_M)
         
         # 标题
         ctk.CTkLabel(
             section_container,
             text="Markdown 模板",
             font=MD.FONT_TITLE,
-            text_color=MD.ON_SURFACE,
+            text_color=MD.TEXT_PRIMARY,
             anchor='w'
-        ).pack(fill='x', pady=(0, MD.SPACING_SM))
+        ).pack(fill='x', pady=(0, MD.PAD_S))
         
         # 模板选择下拉框
         self.template_var = tk.StringVar(value="默认")
@@ -94,74 +92,55 @@ class ControlPanel(MaterialCard):
             values=get_template_names(),
             variable=self.template_var,
             state='readonly',
-            fg_color=MD.SURFACE,
-            button_color=MD.PRIMARY,
-            border_color=MD.OUTLINE,
-            font=MD.FONT_BODY,
+            fg_color=MD.BG_SURFACE,
+            button_color=MD.ACCENT_BLUE,
+            border_color=MD.BORDER,
+            font=MD.FONT_UI,
             command=self._on_template_changed
         )
-        template_combo.pack(fill='x', pady=(0, MD.SPACING_SM))
+        template_combo.pack(fill='x', pady=(0, MD.PAD_S))
         
         # 预览按钮
-        MaterialButton(
+        Btn(
             section_container,
-            text="👁️ 预览模板",
+            text="预览模板",
             command=self._preview_template,
-            style='outlined',
+            kind='normal',
             width=200
         ).pack(fill='x')
     
     def _build_stats_section(self, parent):
         """构建统计区域"""
-        # 区域标题
-        ctk.CTkLabel(
-            parent,
-            text="统计信息",
-            font=MD.FONT_TITLE,
-            text_color=MD.ON_SURFACE,
+        # 底部状态栏一行显示所有统计
+        self.stats = ctk.CTkLabel(
+            self,
+            text="0/0 文件  •  0 B  •  0 语言",
+            font=MD.FONT_UI,
+            text_color=MD.TEXT_SECONDARY,
             anchor='w'
-        ).pack(fill='x', pady=(MD.SPACING_MD, MD.SPACING_SM))
-        
-        # 统计卡片网格
-        stats_grid = ctk.CTkFrame(parent, fg_color='transparent')
-        stats_grid.pack(fill='x', pady=(0, MD.SPACING_MD))
-        
-        stats_grid.grid_columnconfigure(0, weight=1)
-        stats_grid.grid_columnconfigure(1, weight=1)
-        
-        # 创建统计卡片
-        self.stat_cards = {
-            'total': StatCard(stats_grid, "文件", "总文件", "0"),
-            'marked': StatCard(stats_grid, "选中", "已选中", "0"),
-            'size': StatCard(stats_grid, "大小", "总大小", "0 B"),
-            'languages': StatCard(stats_grid, "语言", "语言数", "0")
-        }
-        
-        self.stat_cards['total'].grid(row=0, column=0, sticky='ew', padx=(0, MD.SPACING_XS), pady=(0, MD.SPACING_XS))
-        self.stat_cards['marked'].grid(row=0, column=1, sticky='ew', padx=(MD.SPACING_XS, 0), pady=(0, MD.SPACING_XS))
-        self.stat_cards['size'].grid(row=1, column=0, sticky='ew', padx=(0, MD.SPACING_XS), pady=(MD.SPACING_XS, 0))
-        self.stat_cards['languages'].grid(row=1, column=1, sticky='ew', padx=(MD.SPACING_XS, 0), pady=(MD.SPACING_XS, 0))
+        )
+        self.stats.pack(fill='x', padx=MD.PAD_M, pady=MD.PAD_S)
     
     def _build_actions(self, parent):
         """构建操作按钮 - 现在在滚动区域内"""
         actions = ctk.CTkFrame(parent, fg_color='transparent')
-        actions.pack(fill='x', pady=(MD.SPACING_LG, MD.SPACING_MD))
+        actions.pack(fill='x', pady=(MD.PAD_M, MD.PAD_M))
         
-        MaterialButton(
+        Btn(
             actions,
-            text="👁️ 预览转换结果",
+            text="预览转换结果",
             command=self._preview_conversion,
-            style='tonal',
+            kind='normal',
             height=48
-        ).pack(fill='x', pady=(0, MD.SPACING_SM))
-        
-        MaterialButton(
+        ).pack(fill='x', pady=(0, MD.PAD_M))
+
+        Btn(
             actions,
-            text="🚀 开始转换",
+            text="开始转换",
             command=self._start_conversion,
-            style='success',
+            kind='primary',
             height=56,
-            font=MD.FONT_BODY_LARGE
+            font=MD.FONT_UI
         ).pack(fill='x')
         
         # 添加一些底部空间，确保按钮不会紧贴底部
@@ -170,25 +149,25 @@ class ControlPanel(MaterialCard):
     def _build_progress(self):
         """构建进度显示 - 固定在窗口底部"""
         # 在主卡片底部创建固定的进度容器
-        self.progress_container = ctk.CTkFrame(self, fg_color=MD.SURFACE_2, height=60)
+        self.progress_container = ctk.CTkFrame(self, fg_color=MD.BG_SURFACE, height=60)
         
         progress_content = ctk.CTkFrame(self.progress_container, fg_color='transparent')
-        progress_content.pack(fill='both', expand=True, padx=MD.SPACING_MD, pady=MD.SPACING_SM)
+        progress_content.pack(fill='both', expand=True, padx=MD.PAD_M, pady=MD.PAD_S)
         
         self.progress_bar = ctk.CTkProgressBar(
             progress_content,
             height=8,
             corner_radius=4,
-            fg_color=MD.SURFACE,
-            progress_color=MD.PRIMARY
+            fg_color=MD.BG_SURFACE,
+            progress_color=MD.ACCENT_BLUE
         )
-        self.progress_bar.pack(fill='x', pady=(0, MD.SPACING_SM))
+        self.progress_bar.pack(fill='x', pady=(0, MD.PAD_S))
         
         self.progress_label = ctk.CTkLabel(
             progress_content,
             text="",
-            font=MD.FONT_LABEL,
-            text_color=MD.ON_SURFACE_VARIANT
+            font=MD.FONT_UI,
+            text_color=MD.TEXT_SECONDARY
         )
         self.progress_label.pack()
         
@@ -232,15 +211,15 @@ class ControlPanel(MaterialCard):
     def update_stats(self):
         """更新统计信息"""
         stats = self.file_handler.get_stats()
-        
-        self.stat_cards['total'].update_value(str(stats['total']))
-        self.stat_cards['marked'].update_value(str(stats['marked']))
-        self.stat_cards['size'].update_value(format_size(stats['size']))
-        self.stat_cards['languages'].update_value(str(stats['languages']))
+        self.stats.configure(
+            text=f"{stats['marked']}/{stats['total']} 文件  •  "
+                 f"{format_size(stats['size'])}  •  "
+                 f"{stats['languages']} 语言"
+        )
     
     def show_progress(self):
         """显示进度条"""
-        self.progress_container.pack(side='bottom', fill='x', padx=MD.SPACING_MD, pady=(0, MD.SPACING_MD))
+        self.progress_container.pack(side='bottom', fill='x', padx=MD.PAD_M, pady=(0, MD.PAD_M))
         self.progress_bar.set(0)
     
     def hide_progress(self):

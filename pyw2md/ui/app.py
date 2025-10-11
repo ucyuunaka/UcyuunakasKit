@@ -113,9 +113,9 @@ class MaterialApp(AppBase):
         """设置背景色 - 兼容不同父类"""
         try:
             if DRAG_DROP_AVAILABLE:
-                self.configure(bg=MD.BACKGROUND)
+                self.configure(bg=MD.BG_MAIN)
             else:
-                self.configure(fg_color=MD.BACKGROUND)
+                self.configure(fg_color=MD.BG_MAIN)
         except Exception as e:
             print(f"设置背景色失败: {e}")
     
@@ -148,7 +148,7 @@ class MaterialApp(AppBase):
             font=MD.FONT_LABEL,
             text_color=MD.WARNING
         )
-        hint.grid(row=0, column=0, columnspan=2, pady=MD.SPACING_SM, sticky='ew')
+        hint.grid(row=0, column=0, columnspan=2, pady=MD.PAD_S, sticky='ew')
         self.after(5000, hint.destroy)
     
     def _on_drop(self, event):
@@ -262,10 +262,10 @@ class MaterialApp(AppBase):
             height=50
         )
         self.notification_bar.grid(row=0, column=0, columnspan=2, sticky='ew',
-                                   padx=MD.SPACING_LG, pady=(MD.SPACING_LG, 0))
+                                   padx=MD.PAD_M, pady=(MD.PAD_M, 0))
 
         content = ctk.CTkFrame(self.notification_bar, fg_color='transparent')
-        content.grid(row=0, column=0, sticky='nsew', padx=MD.SPACING_MD, pady=MD.SPACING_SM)
+        content.grid(row=0, column=0, sticky='nsew', padx=MD.PAD_M, pady=MD.PAD_S)
         self.notification_bar.grid_columnconfigure(0, weight=1)
         self.notification_bar.grid_rowconfigure(0, weight=1)
 
@@ -275,7 +275,7 @@ class MaterialApp(AppBase):
             font=MD.FONT_BODY,
             text_color=MD.ON_SURFACE
         )
-        self.notification_label.grid(row=0, column=0, sticky='w', padx=(0, MD.SPACING_MD))
+        self.notification_label.grid(row=0, column=0, sticky='w', padx=(0, MD.PAD_M))
 
         button_frame = ctk.CTkFrame(content, fg_color='transparent')
         button_frame.grid(row=0, column=1, sticky='e')
@@ -288,14 +288,14 @@ class MaterialApp(AppBase):
             hover_color=MD.PRIMARY_CONTAINER,
             width=80,
             height=32
-        ).grid(row=0, column=0, padx=(0, MD.SPACING_SM))
+        ).grid(row=0, column=0, padx=(0, MD.PAD_S))
 
         ctk.CTkButton(
             button_frame,
             text="关闭",
             command=self._close_notification,
             fg_color='transparent',
-            hover_color=MD.SURFACE_2,
+            hover_color=MD.BG_SURFACE,
             width=32,
             height=32
         ).grid(row=0, column=1)
@@ -342,13 +342,13 @@ class MaterialApp(AppBase):
         
         self.file_panel = FileListPanel(self, self.file_handler)
         self.file_panel.grid(row=0, column=0, sticky='nsew', 
-                           padx=(MD.SPACING_LG, MD.SPACING_SM), 
-                           pady=MD.SPACING_LG)
+                           padx=(MD.PAD_M, MD.PAD_S), 
+                           pady=MD.PAD_M)
         
         self.control_panel = ControlPanel(self, self.file_handler)
         self.control_panel.grid(row=0, column=1, sticky='nsew',
-                              padx=(MD.SPACING_SM, MD.SPACING_LG),
-                              pady=MD.SPACING_LG)
+                              padx=(MD.PAD_S, MD.PAD_M),
+                              pady=MD.PAD_M)
         
         self.file_panel.set_update_callback(self._on_file_update)
         self.file_panel.set_file_add_callback(self._on_files_added_to_list)
@@ -478,7 +478,7 @@ class MaterialApp(AppBase):
         )
 
         # 使用grid布局，但需要特殊处理，因为toast应该浮动在其他内容之上
-        self.toast_label.grid(row=1, column=0, columnspan=2, pady=(0, MD.SPACING_LG), sticky='ew')
+        self.toast_label.grid(row=1, column=0, columnspan=2, pady=(0, MD.PAD_M), sticky='ew')
         self.toast_label.lift()  # 确保显示在最上层
 
         self.after(3000, lambda: self.toast_label.destroy() if self.toast_label else None)
