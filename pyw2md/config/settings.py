@@ -4,13 +4,23 @@
 
 import json
 import os
+import sys
 from typing import Dict, Any
 
 class Settings:
     """配置管理器"""
 
     def __init__(self, config_file: str = "config.json"):
-        self.config_file = config_file
+        # 检测是否为打包环境
+        if hasattr(sys, '_MEIPASS'):
+            # 打包环境下，配置文件放在用户数据目录
+            self.config_dir = os.path.join(os.path.expanduser('~'), '.pyw2md')
+            os.makedirs(self.config_dir, exist_ok=True)
+            self.config_file = os.path.join(self.config_dir, config_file)
+        else:
+            # 开发环境下，配置文件放在当前目录
+            self.config_file = config_file
+
         self.config: Dict[str, Any] = {}
         self.load()
 

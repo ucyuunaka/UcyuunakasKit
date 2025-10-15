@@ -30,11 +30,22 @@ import os
 
 # 拖放功能模块的导入采用安全降级策略
 # 如果tkinterdnd2不可用，应用会自动降级为文件选择模式
+# 新增：使用utils.packaging模块优化打包环境下的导入
 try:
-    from tkinterdnd2 import DND_FILES, TkinterDnD
-    DRAG_DROP_AVAILABLE = True  # 标记拖放功能可用
+    from utils.packaging import safe_import_tkinterdnd2, print_packaging_debug_info
+    # 在打包环境中打印调试信息
+    if __import__('utils.packaging', fromlist=['packaging']).is_packaged():
+        print_packaging_debug_info()
+
+    # 安全导入tkinterdnd2
+    DRAG_DROP_AVAILABLE, import_error = safe_import_tkinterdnd2()
+    if DRAG_DROP_AVAILABLE:
+        from tkinterdnd2 import DND_FILES, TkinterDnD
+    else:
+        print(f"tkinterdnd2导入失败: {import_error}")
+        print("提示: 安装 tkinterdnd2 以启用拖放功能: pip install tkinterdnd2")
 except ImportError:
-    DRAG_DROP_AVAILABLE = False  # 标记拖放功能不可用
+    DRAG_DROP_AVAILABLE = False
     print("提示: 安装 tkinterdnd2 以启用拖放功能: pip install tkinterdnd2")
 
 from config.theme import MD
