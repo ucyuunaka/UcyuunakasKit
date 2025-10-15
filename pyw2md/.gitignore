@@ -1,4 +1,65 @@
-code2markdown_config.json
+# 配置文件
 config.json
+config_*.json
+code2markdown_config.json
+
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyi
+*.pyw
+*.pyz
+*.pywz
+
+# 打包文件
+build/
+dist/
+*.spec
+*.manifest
+*.exe
+*.dll
+*.so
+*.dylib
+*.app
+*.msi
+*.msix
+*.deb
+*.rpm
+
+# 虚拟环境
+venv/
+env/
+.venv/
+.env/
+
+# IDE 配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 日志文件
+*.log
+logs/
+
+# 临时文件
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# 开发工具
+.mypy_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+
+# CLAUDE 文档
 CLAUDE.md
 .mcp.json
+.claude
