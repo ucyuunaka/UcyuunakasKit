@@ -48,3 +48,8 @@ Thumbs.db
 terminal_out/dashboard_simulator.py
 prompt_templates/1.md
 prompt_templates/用.md
+
+.claude
+
+# Independent git folders (alternative to submodules)
+testsubgit/
