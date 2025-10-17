@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>理解积分环节 1/s</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            font-size: 2.5em;
+            border-bottom: 4px solid #764ba2;
+            padding-bottom: 15px;
+        }
+        h2 {
+            color: #764ba2;
+            margin-top: 30px;
+            border-left: 6px solid #e74c3c;
+            padding-left: 15px;
+        }
+        .highlight-box {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-size: 1.2em;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .formula {
+            background: #fff3cd;
+            border: 3px solid #ffc107;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            font-size: 1.3em;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+        .demo-box {
+            background: #f8f9fa;
+            border: 3px solid #667eea;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        canvas {
+            display: block;
+            margin: 20px auto;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            background: white;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 35px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            font-size: 1.1em;
+        }
+        td {
+            border: 2px solid #dee2e6;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.05em;
+        }
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        .highlight {
+            background: #ffeb3b;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-weight: bold;
+            color: #d32f2f;
+        }
+        .step-box {
+            background: white;
+            border: 2px dashed #9c27b0;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+        }
+        .step {
+            margin: 15px 0;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            border-left: 5px solid #667eea;
+        }
+        .key-insight {
+            background: #e8f5e9;
+            border: 3px solid #4caf50;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 25px 0;
+        }
+        .analogy {
+            background: #e3f2fd;
+            border-left: 6px solid #2196f3;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 彻底理解积分(1/s)和微分(s)</h1>
+
+        <div class="highlight-box">
+            <h2 style="color: white; border: none; margin: 0;">🔑 核心纠正</h2>
+            <div style="font-size: 1.5em; margin-top: 20px; text-align: center;">
+                <div style="margin: 15px 0;">✅ <strong>s</strong> = 微分算子 (d/dt)</div>
+                <div style="margin: 15px 0;">✅ <strong>1/s</strong> = 积分算子 (∫dt)</div>
+            </div>
+        </div>
+
+        <h2>📍 问题A：为什么"1"对应"1/s"（为什么是积分）？</h2>
+
+        <div class="analogy">
+            <h3>🚗 物理类比：汽车运动</h3>
+            <table>
+                <tr>
+                    <th>物理量</th>
+                    <th>时域表达</th>
+                    <th>频域表达</th>
+                    <th>关系</th>
+                </tr>
+                <tr>
+                    <td><strong>速度</strong></td>
+                    <td>v(t) = 1 m/s<br>(恒定速度)</td>
+                    <td>V(s) = 1/s</td>
+                    <td>阶跃信号</td>
+                </tr>
+                <tr>
+                    <td><strong>位移</strong></td>
+                    <td>x(t) = ∫v dt = ∫1 dt = t</td>
+                    <td>X(s) = 1/s²</td>
+                    <td>对速度积分</td>
+                </tr>
+            </table>
+            <div class="formula">
+                位移 = ∫速度 dt<br>
+                X(s) = V(s)/s = (1/s)/s = 1/s²
+            </div>
+        </div>
+
+        <div class="key-insight">
+            <h3>💡 本质理解</h3>
+            <p style="font-size: 1.2em; line-height: 2;">
+                <strong>为什么输入"1"对应"1/s"？</strong><br><br>
+                
+                输入是<span class="highlight">单位阶跃函数 u(t)</span>：<br>
+                • t < 0: u(t) = 0<br>
+                • t ≥ 0: u(t) = 1<br><br>
+
+                拉普拉斯变换：<br>
+                <code style="font-size: 1.1em;">U(s) = ∫₀^∞ 1·e^(-st) dt = [-e^(-st)/s]₀^∞ = 1/s</code>
+            </p>
+        </div>
+
+        <div class="demo-box">
+            <h3>📊 演示1：积分过程的动态可视化</h3>
+            <p>观察恒定输入(1)如何通过积分环节(1/s)产生斜坡输出(t)</p>
+            <canvas id="integrationCanvas" width="1100" height="500"></canvas>
+            <div class="controls">
+                <button onclick="startIntegration()">▶️ 开始积分</button>
+                <button onclick="pauseIntegration()">⏸️ 暂停</button>
+                <button onclick="resetIntegration()">🔄 重置</button>
+            </div>
+            <div class="formula">
+                传递函数：G(s) = 1/s<br>
+                输入：u(t) = 1 → U(s) = 1/s<br>
+                输出：Y(s) = G(s)·U(s) = (1/s)·(1/s) = 1/s²<br>
+                反变换：y(t) = t （斜坡信号）
+            </div>
+        </div>
+
+        <h2>📍 问题B：s是微分环节，时域是什么？</h2>
+
+        <div class="analogy">
+            <h3>🚗 继续用汽车类比</h3>
+            <table>
+                <tr>
+                    <th>物理量</th>
+                    <th>时域表达</th>
+                    <th>频域表达</th>
+                    <th>关系</th>
+                </tr>
+                <tr>
+                    <td><strong>位移</strong></td>
+                    <td>x(t) = sin(t)</td>
+                    <td>X(s) = 1/(s²+1)</td>
+                    <td>输入信号</td>
+                </tr>
+                <tr>
+                    <td><strong>速度</strong></td>
+                    <td>v(t) = dx/dt = cos(t)</td>
+                    <td>V(s) = s·X(s) = s/(s²+1)</td>
+                    <td><span class="highlight">对位移微分</span></td>
+                </tr>
+                <tr>
+                    <td><strong>加速度</strong></td>
+                    <td>a(t) = dv/dt = -sin(t)</td>
+                    <td>A(s) = s·V(s) = s²/(s²+1)</td>
+                    <td>对速度再微分</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="key-insight">
+            <h3>💡 微分环节的本质</h3>
+            <p style="font-size: 1.2em; line-height: 2;">
+                <strong>传递函数 G(s) = s 的意义：</strong><br><br>
+
+                时域：<code>y(t) = dx(t)/dt</code><br>
+                频域：<code>Y(s) = s·X(s)</code><br><br>
+
+                <span class="highlight">乘以s = 对时域信号求导</span>
+            </p>
+        </div>
+
+        <div class="demo-box">
+            <h3>📊 演示2：微分过程的动态可视化</h3>
+            <p>观察正弦输入如何通过微分环节(s)变成余弦输出</p>
+            <canvas id="differentiationCanvas" width="1100" height="500"></canvas>
+            <div class="controls">
+                <button onclick="startDifferentiation()">▶️ 开始微分</button>
+                <button onclick="pauseDifferentiation()">⏸️ 暂停</button>
+                <button onclick="resetDifferentiation()">🔄 重置</button>
+            </div>
+            <div class="formula">
+                传递函数：G(s) = s<br>
+                输入：x(t) = sin(t) → X(s) = 1/(s²+1)<br>
+                输出：Y(s) = s·X(s) = s/(s²+1)<br>
+                反变换：y(t) = cos(t) = d[sin(t)]/dt
+            </div>
+        </div>
+
+        <h2>🎯 深入理解：为什么是"1/s"而不是其他？</h2>
+
+        <div class="step-box">
+            <div class="step">
+                <strong>步骤1：拉普拉斯变换的定义</strong>
+                <div class="formula" style="background: white;">
+                    F(s) = ∫₀^∞ f(t)·e^(-st) dt
+                </div>
+            </div>
+
+            <div class="step">
+                <strong>步骤2：计算单位阶跃u(t)=1的拉氏变换</strong>
+                <div class="formula" style="background: white;">
+                    U(s) = ∫₀^∞ 1·e^(-st) dt<br>
+                    = [-1/s·e^(-st)]₀^∞<br>
+                    = 0 - (-1/s·e^0)<br>
+                    = 1/s
+                </div>
+            </div>
+
+            <div class="step">
+                <strong>步骤3：为什么1/s代表积分？</strong>
+                <div class="formula" style="background: white;">
+                    如果输入是 x(t)，输出是 y(t) = ∫x(t)dt<br>
+                    则：Y(s) = X(s)/s
+                </div>
+                <p style="margin-top: 15px; font-size: 1.1em;">
+                    证明：对 y(t) = ∫x(t)dt 两边求导<br>
+                    dy/dt = x(t)<br>
+                    频域：s·Y(s) = X(s)<br>
+                    所以：<span class="highlight">Y(s) = X(s)/s</span>
+                </p>
+            </div>
+        </div>
+
+        <h2>📚 完整对照表</h2>
+
+        <table>
+            <tr>
+                <th>传递函数</th>
+                <th>时域运算</th>
+                <th>输入示例</th>
+                <th>输出示例</th>
+                <th>物理例子</th>
+            </tr>
+            <tr style="background: #ffe6e6;">
+                <td><strong>G(s) = s</strong></td>
+                <td><strong>微分</strong><br>y = dx/dt</td>
+                <td>位移 x(t)</td>
+                <td>速度 v(t)</td>
+                <td>速度计<br>加速度传感器</td>
+            </tr>
+            <tr style="background: #e6f3ff;">
+                <td><strong>G(s) = 1/s</strong></td>
+                <td><strong>积分</strong><br>y = ∫x dt</td>
+                <td>速度 v(t)</td>
+                <td>位移 x(t)</td>
+                <td>水箱<br>电容充电</td>
+            </tr>
+            <tr>
+                <td><strong>G(s) = s²</strong></td>
+                <td><strong>二阶微分</strong><br>y = d²x/dt²</td>
+                <td>位移 x(t)</td>
+                <td>加速度 a(t)</td>
+                <td>加速度计</td>
+            </tr>
+            <tr>
+                <td><strong>G(s) = 1/s²</strong></td>
+                <td><strong>二重积分</strong><br>y = ∫∫x dt²</td>
+                <td>加速度 a(t)</td>
+                <td>位移 x(t)</td>
+                <td>惯性导航</td>
+            </tr>
+        </table>
+
+        <h2>🎓 记忆技巧</h2>
+
+        <div class="key-insight">
+            <h3>✅ 三句话记住一辈子</h3>
+            <ol style="font-size: 1.3em; line-height: 2.5; margin-left: 30px;">
+                <li><span class="highlight">s在分子 = 微分</span>（乘s就是求导）<br>
+                    例如：s·X(s) ← 对x(t)求导</li>
+                
+                <li><span class="highlight">s在分母 = 积分</span>（除以s就是积分）<br>
+                    例如：X(s)/s ← 对x(t)积分</li>
+                
+                <li><span class="highlight">1/s是"累积器"</span><br>
+                    输入1（恒定流量）→ 输出t（水位线性上升）</li>
+            </ol>
+        </div>
+
+        <div class="analogy">
+            <h3>🏊 终极类比：游泳池</h3>
+            <div style="display: flex; justify-content: space-around; margin: 20px 0;">
+                <div style="flex: 1; margin: 10px; padding: 20px; background: white; border-radius: 10px; border: 2px solid #2196f3;">
+                    <h4 style="color: #2196f3;">积分环节 (1/s)</h4>
+                    <p style="font-size: 1.1em; line-height: 1.8;">
+                        • <strong>输入：</strong>水龙头流量（恒定=1）<br>
+                        • <strong>系统：</strong>游泳池（蓄水器）<br>
+                        • <strong>输出：</strong>水位高度（随时间累积）<br>
+                        • <strong>数学：</strong>水位 = ∫流量 dt
+                    </p>
+                </div>
+                <div style="flex: 1; margin: 10px; padding: 20px; background: white; border-radius: 10px; border: 2px solid #f44336;">
+                    <h4 style="color: #f44336;">微分环节 (s)</h4>
+                    <p style="font-size: 1.1em; line-height: 1.8;">
+                        • <strong>输入：</strong>水位高度<br>
+                        • <strong>系统：</strong>水位变化率检测器<br>
+                        • <strong>输出：</strong>水位上升/下降速度<br>
+                        • <strong>数学：</strong>速度 = d(水位)/dt
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="highlight-box">
+            <h3 style="color: white; margin-top: 0;">🎯 回答你的问题</h3>
+            <div style="font-size: 1.15em; line-height: 2;">
+                <strong>A. 为什么"1"对应"1/s"？</strong><br>
+                因为恒定输入u(t)=1的拉氏变换就是1/s<br>
+                物理意义：恒定流量经过积分器，产生线性增长的累积量<br><br>
+
+                <strong>B. s对应什么时域？如何理解？</strong><br>
+                s对应时域的"求导运算" d/dt<br>
+                • 输入：任意信号 x(t)<br>
+                • 输出：该信号的导数 dx(t)/dt<br>
+                • 频域：Y(s) = s·X(s)<br>
+                物理意义：检测信号的变化趋势（速度、加速度等）
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // 演示1：积分过程
+        const intCanvas = document.getElementById('integrationCanvas');
+        const intCtx = intCanvas.getContext('2d');
+        let intTime = 0;
+        let intAnimationId = null;
+
+        function drawIntegration() {
+            const width = intCanvas.width;
+            const height = intCanvas.height;
+            intCtx.clearRect(0, 0, width, height);
+
+            // 分成两部分：输入和输出
+            const leftWidth = width / 2;
+
+            // 绘制分隔线
+            intCtx.strokeStyle = '#333';
+            intCtx.lineWidth = 3;
+            intCtx.beginPath();
+            intCtx.moveTo(leftWidth, 0);
+            intCtx.lineTo(leftWidth, height);
+            intCtx.stroke();
+
+            // 左侧：输入信号 u(t) = 1
+            intCtx.font = 'bold 20px Arial';
+            intCtx.fillStyle = '#2196f3';
+            intCtx.fillText('输入: u(t) = 1 (阶跃信号)', 20, 30);
+
+            // 绘制坐标轴
+            intCtx.strokeStyle = '#999';
+            intCtx.lineWidth = 2;
+            intCtx.beginPath();
+            intCtx.moveTo(50, height/2);
+            intCtx.lineTo(leftWidth - 50, height/2);
+            intCtx.moveTo(50, 50);
+            intCtx.lineTo(50, height - 50);
+            intCtx.stroke();
+
+            // 绘制阶跃信号
+            const stepHeight = 150;
+            intCtx.strokeStyle = '#2196f3';
+            intCtx.lineWidth = 4;
+            intCtx.beginPath();
+            intCtx.moveTo(50, height/2);
+            intCtx.lineTo(50 + intTime * 2, height/2);
+            intCtx.lineTo(50 + intTime * 2, height/2 - stepHeight);
+            intCtx.lineTo(leftWidth - 50, height/2 - stepHeight);
+            intCtx.stroke();
+
+            // 标注
+            intCtx.fillStyle = '#2196f3';
+            intCtx.font = '16px Arial';
+            intCtx.fillText('1', 20, height/2 - stepHeight);
+            intCtx.fillText('0', 20, height/2 + 5);
+            intCtx.fillText('t', leftWidth - 70, height/2 + 25);
+
+            // 右侧：输出信号 y(t) = t
+            intCtx.fillStyle = '#f44336';
+            intCtx.font = 'bold 20px Arial';
+            intCtx.fillText('输出: y(t) = t (斜坡信号)', leftWidth + 20, 30);
+
+            // 绘制坐标轴
+            intCtx.strokeStyle = '#999';
+            intCtx.lineWidth = 2;
+            intCtx.beginPath();
+            intCtx.moveTo(leftWidth + 50, height/2);
+            intCtx.lineTo(width - 50, height/2);
+            intCtx.moveTo(leftWidth + 50, 50);
+            intCtx.lineTo(leftWidth + 50, height - 50);
+            intCtx.stroke();
+
+            // 绘制斜坡信号
+            intCtx.strokeStyle = '#f44336';
+            intCtx.lineWidth = 4;
+            intCtx.beginPath();
+            intCtx.moveTo(leftWidth + 50, height/2);
+            
+            const maxTime = Math.min(intTime, 200);
+            for (let t = 0; t <= maxTime; t += 1) {
+                const x = leftWidth + 50 + t * 2;
+                const y = height/2 - t * (stepHeight / 100);
+                if (t === 0) {
+                    intCtx.moveTo(x, y);
+                } else {
+                    intCtx.lineTo(x, y);
+                }
+            }
+            intCtx.stroke();
+
+            // 标注
+            intCtx.fillStyle = '#f44336';
+            intCtx.font = '16px Arial';
+            intCtx.fillText('y(t)', leftWidth + 15, 70);
+            intCtx.fillText('t', width - 70, height/2 + 25);
+
+            // 中间的传递函数
+            intCtx.fillStyle = '#4caf50';
+            intCtx.font = 'bold 24px Arial';
+            intCtx.fillText('G(s) = 1/s', leftWidth - 80, height/2 - 30);
+            intCtx.font = '18px Arial';
+            intCtx.fillText('(积分器)', leftWidth - 70, height/2 - 5);
+
+            // 绘制箭头
+            drawArrow(intCtx, leftWidth - 150, height/2, leftWidth - 100, height/2, '#4caf50');
+
+            // 当前时间指示
+            intCtx.fillStyle = '#333';
+            intCtx.font = '20px Arial';
+            intCtx.fillText(`时间: ${(intTime/10).toFixed(1)}s`, width/2 - 60, height - 20);
+        }
+
+        function drawArrow(ctx, x1, y1, x2, y2, color) {
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = 3;
+            
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+
+            const angle = Math.atan2(y2 - y1, x2 - x1);
+            ctx.beginPath();
+            ctx.moveTo(x2, y2);
+            ctx.lineTo(x2 - 15 * Math.cos(angle - Math.PI/6), y2 - 15 * Math.sin(angle - Math.PI/6));
+            ctx.lineTo(x2 - 15 * Math.cos(angle + Math.PI/6), y2 - 15 * Math.sin(angle + Math.PI/6));
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function animateIntegration() {
+            if (intTime < 200) {
+                intTime += 0.5;
+            }
+            drawIntegration();
+            intAnimationId = requestAnimationFrame(animateIntegration);
+        }
+
+        function startIntegration() {
+            if (!intAnimationId) {
+                animateIntegration();
+            }
+        }
+
+        function pauseIntegration() {
+            if (intAnimationId) {
+                cancelAnimationFrame(intAnimationId);
+                intAnimationId = null;
+            }
+        }
+
+        function resetIntegration() {
+            pauseIntegration();
+            intTime = 0;
+            drawIntegration();
+        }
+
+        // 演示2：微分过程
+        const diffCanvas = document.getElementById('differentiationCanvas');
+        const diffCtx = diffCanvas.getContext('2d');
+        let diffTime = 0;
+        let diffAnimationId = null;
+
+        function drawDifferentiation() {
+            const width = diffCanvas.width;
+            const height = diffCanvas.height;
+            diffCtx.clearRect(0, 0, width, height);
+
+            const leftWidth = width / 2;
+
+            // 绘制分隔线
+            diffCtx.strokeStyle = '#333';
+            diffCtx.lineWidth = 3;
+            diffCtx.beginPath();
+            diffCtx.moveTo(leftWidth, 0);
+            diffCtx.lineTo(leftWidth, height);
+            diffCtx.stroke();
+
+            // 左侧：输入信号 sin(t)
+            diffCtx.font = 'bold 20px Arial';
+            diffCtx.fillStyle = '#2196f3';
+            diffCtx.fillText('输入: x(t) = sin(t)', 20, 30);
+
+            // 绘制坐标轴
+            diffCtx.strokeStyle = '#999';
+            diffCtx.lineWidth = 2;
+            diffCtx.beginPath();
+            diffCtx.moveTo(50, height/2);
+            diffCtx.lineTo(leftWidth - 50, height/2);
+            diffCtx.moveTo(50, 50);
+            diffCtx.lineTo(50, height - 50);
+            diffCtx.stroke();
+
+            // 绘制正弦信号
+            const amplitude = 120;
+            const frequency = 0.05;
+            diffCtx.strokeStyle = '#2196f3';
+            diffCtx.lineWidth = 4;
+            diffCtx.beginPath();
+            
+            for (let t = 0; t <= diffTime && t <= 200; t += 1) {
+                const x = 50 + t * 2;
+                const y = height/2 - amplitude * Math.sin(t * frequency * 2 * Math.PI);
+                if (t === 0) {
+                    diffCtx.moveTo(x, y);
+                } else {
+                    diffCtx.lineTo(x, y);
+                }
+            }
+            diffCtx.stroke();
+
+            // 右侧：输出信号 cos(t)
+            diffCtx.fillStyle = '#f44336';
+            diffCtx.font = 'bold 20px Arial';
+            diffCtx.fillText('输出: y(t) = cos(t) = d[sin(t)]/dt', leftWidth + 20, 30);
+
+            // 绘制坐标轴
+            diffCtx.strokeStyle = '#999';
+            diffCtx.lineWidth = 2;
+            diffCtx.beginPath();
+            diffCtx.moveTo(leftWidth + 50, height/2);
+            diffCtx.lineTo(width - 50, height/2);
+            diffCtx.moveTo(leftWidth + 50, 50);
+            diffCtx.lineTo(leftWidth + 50, height - 50);
+            diffCtx.stroke();
+
+            // 绘制余弦信号
+            diffCtx.strokeStyle = '#f44336';
+            diffCtx.lineWidth = 4;
+            diffCtx.beginPath();
+            
+            for (let t = 0; t <= diffTime && t <= 200; t += 1) {
+                const x = leftWidth + 50 + t * 2;
+                const y = height/2 - amplitude * Math.cos(t * frequency * 2 * Math.PI);
+                if (t === 0) {
+                    diffCtx.moveTo(x, y);
+                } else {
+                    diffCtx.lineTo(x, y);
+                }
+            }
+            diffCtx.stroke();
+
+            // 中间的传递函数
+            diffCtx.fillStyle = '#4caf50';
+            diffCtx.font = 'bold 24px Arial';
+            diffCtx.fillText('G(s) = s', leftWidth - 70, height/2 - 30);
+            diffCtx.font = '18px Arial';
+            diffCtx.fillText('(微分器)', leftWidth - 70, height/2 - 5);
+
+            // 绘制箭头
+            drawArrow(diffCtx, leftWidth - 150, height/2, leftWidth - 100, height/2, '#4caf50');
+
+            // 当前时间指示
+            diffCtx.fillStyle = '#333';
+            diffCtx.font = '20px Arial';
+            diffCtx.fillText(`时间: ${(diffTime/10).toFixed(1)}s`, width/2 - 60, height - 20);
+
+            // 相位差标注
+            if (diffTime > 25) {
+                diffCtx.fillStyle = '#ff9800';
+                diffCtx.font = 'bold 18px Arial';
+                diffCtx.fillText('注意：输出超前90°！', width/2 - 100, 60);
+            }
+        }
+
+        function animateDifferentiation() {
+            if (diffTime < 200) {
+                diffTime += 0.5;
+            }
+            drawDifferentiation();
+            diffAnimationId = requestAnimationFrame(animateDifferentiation);
+        }
+
+        function startDifferentiation() {
+            if (!diffAnimationId) {
+                animateDifferentiation();
+            }
+        }
+
+        function pauseDifferentiation() {
+            if (diffAnimationId) {
+                cancelAnimationFrame(diffAnimationId);
+                diffAnimationId = null;
+            }
+        }
+
+        function resetDifferentiation() {
+            pauseDifferentiation();
+            diffTime = 0;
+            drawDifferentiation();
+        }
+
+        // 初始化
+        drawIntegration();
+        drawDifferentiation();
+        startIntegration();
+        startDifferentiation();
+    </script>
+</body>
+</html>
