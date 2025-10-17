@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>彻底理解"s"的本质</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #1e3c72;
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            border-bottom: 4px solid #2a5298;
+            padding-bottom: 15px;
+        }
+        h2 {
+            color: #2a5298;
+            margin: 30px 0 15px 0;
+            font-size: 1.8em;
+            border-left: 6px solid #e74c3c;
+            padding-left: 15px;
+        }
+        .identity-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+        }
+        .identity-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+        .identity-number {
+            font-size: 3em;
+            font-weight: bold;
+            display: inline-block;
+            background: white;
+            color: #667eea;
+            width: 70px;
+            height: 70px;
+            line-height: 70px;
+            text-align: center;
+            border-radius: 50%;
+            margin-right: 20px;
+            vertical-align: middle;
+        }
+        .identity-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .identity-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            margin-left: 90px;
+        }
+        .formula {
+            background: #fff3cd;
+            border: 3px solid #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 1.3em;
+            text-align: center;
+            font-weight: bold;
+        }
+        .demo-box {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 2px solid #dee2e6;
+        }
+        canvas {
+            display: block;
+            margin: 20px auto;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            background: white;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 35px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.1em;
+        }
+        td {
+            border: 2px solid #dee2e6;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.05em;
+        }
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        .highlight {
+            background: #ffeb3b;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-weight: bold;
+            color: #d32f2f;
+        }
+        .example-box {
+            background: #e3f2fd;
+            border-left: 5px solid #2196f3;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .warning-box {
+            background: #ffebee;
+            border-left: 5px solid #f44336;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .success-box {
+            background: #e8f5e9;
+            border-left: 5px solid #4caf50;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .math-derivation {
+            background: white;
+            border: 2px dashed #9c27b0;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+        }
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 彻底搞懂自动控制中的"s"</h1>
+        
+        <div class="warning-box">
+            <h3>⚠️ 最大误区：不要把s想得太复杂！</h3>
+            <p style="font-size: 1.1em; line-height: 1.8;">
+                s不是什么神秘的符号，它就是一个<strong>工具变量</strong>，目的是让微分方程变简单！<br>
+                就像代数里的x、y一样，只不过s有特殊的物理意义。
+            </p>
+        </div>
+
+        <h2>🎭 s的五重身份</h2>
+
+        <div class="identity-card">
+            <span class="identity-number">1</span>
+            <div class="identity-content">
+                <div class="identity-title">💼 身份一：微分算子（最常用）</div>
+                <div class="formula">s ≡ d/dt（对时间求导）</div>
+                <strong>物理意义：</strong>变化率、速度<br>
+                <strong>例子：</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li>位置 x(t) → 速度 v(t) = dx/dt = <span class="highlight">s·X(s)</span></li>
+                    <li>速度 v(t) → 加速度 a(t) = dv/dt = <span class="highlight">s·V(s) = s²·X(s)</span></li>
+                </ul>
+                <strong style="color: #ffeb3b; font-size: 1.2em;">✨ 记忆口诀：s就是"求导"，s²就是"求二阶导"</strong>
+            </div>
+        </div>
+
+        <div class="identity-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <span class="identity-number" style="color: #f5576c;">2</span>
+            <div class="identity-content">
+                <div class="identity-title">🔬 身份二：复频率</div>
+                <div class="formula">s = σ + jω（复数！）</div>
+                <strong>物理意义：</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li><strong>σ</strong>（实部）：信号的衰减/增长速度</li>
+                    <li><strong>ω</strong>（虚部）：信号的振荡频率</li>
+                </ul>
+                <strong style="color: #fff; font-size: 1.2em;">✨ 信号 = e^(σt)·sin(ωt) = "振荡衰减"的波</strong>
+            </div>
+        </div>
+
+        <div class="identity-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <span class="identity-number" style="color: #00f2fe;">3</span>
+            <div class="identity-content">
+                <div class="identity-title">📡 身份三：频域变量（s=jω时）</div>
+                <div class="formula">令 σ=0，则 s = jω</div>
+                <strong>物理意义：</strong>纯正弦信号的频率<br>
+                <strong>应用：</strong>频率响应、波特图、奈奎斯特图<br>
+                <strong style="color: #fff; font-size: 1.2em;">✨ 这时候在分析系统对不同频率信号的响应</strong>
+            </div>
+        </div>
+
+        <div class="identity-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+            <span class="identity-number" style="color: #fa709a;">4</span>
+            <div class="identity-content">
+                <div class="identity-title">🎯 身份四：系统特征根</div>
+                <div class="formula">特征方程的解：D(s) = 0</div>
+                <strong>物理意义：</strong>系统的"自然频率"和"衰减系数"<br>
+                <strong>判断稳定性：</strong>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li>s在左半平面（σ<0）→ 稳定✅</li>
+                    <li>s在右半平面（σ>0）→ 不稳定❌</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="identity-card" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333;">
+            <span class="identity-number" style="color: #a8edea; background: #333;">5</span>
+            <div class="identity-content">
+                <div class="identity-title">🔧 身份五：变换工具</div>
+                <strong>拉普拉斯变换：</strong>
+                <div class="formula" style="color: #333;">F(s) = ∫₀^∞ f(t)·e^(-st) dt</div>
+                <strong>作用：</strong>时域 ↔ 复频域的桥梁<br>
+                <strong style="font-size: 1.2em;">✨ 把f(t)变成F(s)，方便分析和计算</strong>
+            </div>
+        </div>
+
+        <h2>📊 可视化演示：s的物理意义</h2>
+        
+        <div class="demo-box">
+            <h3>演示1：s作为复频率 (s = σ + jω)</h3>
+            <p>调节σ（衰减）和ω（频率），观察信号形态：<span class="highlight">y(t) = e^(σt)·sin(ωt)</span></p>
+            <div style="text-align: center; margin: 20px 0;">
+                <label>σ (衰减系数): <span id="sigmaValue">-0.5</span></label><br>
+                <input type="range" id="sigmaSlider" min="-2" max="2" step="0.1" value="-0.5" style="width: 400px;">
+                <br><br>
+                <label>ω (角频率): <span id="omegaValue">5</span></label><br>
+                <input type="range" id="omegaSlider" min="1" max="20" step="0.5" value="5" style="width: 400px;">
+            </div>
+            <canvas id="signalCanvas" width="1000" height="400"></canvas>
+            <div style="text-align: center; margin-top: 15px;">
+                <div id="stability" style="font-size: 1.3em; font-weight: bold; padding: 10px; border-radius: 8px;"></div>
+            </div>
+        </div>
+
+        <div class="demo-box">
+            <h3>演示2：s平面（极点分布）</h3>
+            <p>点击画布添加极点，观察系统响应</p>
+            <canvas id="sPlaneCanvas" width="700" height="700"></canvas>
+            <div class="controls">
+                <button onclick="clearPoles()">🗑️ 清除所有极点</button>
+                <button onclick="addStablePole()">✅ 添加稳定极点</button>
+                <button onclick="addUnstablePole()">❌ 添加不稳定极点</button>
+            </div>
+            <div id="poleInfo" style="text-align: center; font-size: 1.2em; margin-top: 15px; font-weight: bold;"></div>
+        </div>
+
+        <h2>📚 s的常用对应关系（背这个表就够了！）</h2>
+        
+        <table>
+            <tr>
+                <th>时域 f(t)</th>
+                <th>s域 F(s)</th>
+                <th>物理意义</th>
+                <th>记忆技巧</th>
+            </tr>
+            <tr>
+                <td>δ(t) 冲激</td>
+                <td>1</td>
+                <td>瞬间脉冲</td>
+                <td>最简单的输入</td>
+            </tr>
+            <tr>
+                <td>1 阶跃</td>
+                <td>1/s</td>
+                <td>突然接通</td>
+                <td><span class="highlight">s在分母=积分</span></td>
+            </tr>
+            <tr>
+                <td>t 斜坡</td>
+                <td>1/s²</td>
+                <td>匀速增长</td>
+                <td>对阶跃再积分</td>
+            </tr>
+            <tr>
+                <td>e^(-at)</td>
+                <td>1/(s+a)</td>
+                <td>指数衰减</td>
+                <td>极点在 -a</td>
+            </tr>
+            <tr>
+                <td>sin(ωt)</td>
+                <td>ω/(s²+ω²)</td>
+                <td>正弦振荡</td>
+                <td>极点在 ±jω</td>
+            </tr>
+            <tr>
+                <td>cos(ωt)</td>
+                <td>s/(s²+ω²)</td>
+                <td>余弦振荡</td>
+                <td><span class="highlight">s在分子</span></td>
+            </tr>
+            <tr>
+                <td style="background: #ffe6e6;"><strong>df/dt 微分</strong></td>
+                <td style="background: #ffe6e6;"><strong>s·F(s)</strong></td>
+                <td style="background: #ffe6e6;"><strong>变化率</strong></td>
+                <td style="background: #ffe6e6;"><span class="highlight">乘s = 求导</span></td>
+            </tr>
+            <tr>
+                <td style="background: #e6f3ff;"><strong>∫f dt 积分</strong></td>
+                <td style="background: #e6f3ff;"><strong>F(s)/s</strong></td>
+                <td style="background: #e6f3ff;"><strong>累积</strong></td>
+                <td style="background: #e6f3ff;"><span class="highlight">除以s = 积分</span></td>
+            </tr>
+        </table>
+
+        <h2>💡 实战案例：用s分析RC电路</h2>
+
+        <div class="example-box">
+            <h3>问题：求RC低通滤波器的传递函数</h3>
+            <div style="text-align: center; margin: 20px 0;">
+                <svg width="400" height="150">
+                    <!-- 输入 -->
+                    <text x="10" y="80" font-size="16" fill="#333">V_in(t)</text>
+                    <line x1="60" y1="75" x2="100" y2="75" stroke="#333" stroke-width="2"/>
+                    
+                    <!-- 电阻 -->
+                    <rect x="100" y="60" width="80" height="30" fill="none" stroke="#e74c3c" stroke-width="2"/>
+                    <text x="120" y="80" font-size="16" fill="#e74c3c" font-weight="bold">R</text>
+                    
+                    <line x1="180" y1="75" x2="220" y2="75" stroke="#333" stroke-width="2"/>
+                    
+                    <!-- 电容 -->
+                    <line x1="220" y1="55" x2="220" y2="95" stroke="#3498db" stroke-width="3"/>
+                    <line x1="230" y1="55" x2="230" y2="95" stroke="#3498db" stroke-width="3"/>
+                    <text x="240" y="80" font-size="16" fill="#3498db" font-weight="bold">C</text>
+                    
+                    <!-- 输出 -->
+                    <line x1="220" y1="75" x2="270" y2="75" stroke="#333" stroke-width="2"/>
+                    <text x="280" y="80" font-size="16" fill="#333">V_out(t)</text>
+                    
+                    <!-- 地线 -->
+                    <line x1="220" y1="95" x2="220" y2="120" stroke="#333" stroke-width="2"/>
+                    <line x1="210" y1="120" x2="230" y2="120" stroke="#333" stroke-width="3"/>
+                    <line x1="213" y1="125" x2="227" y2="125" stroke="#333" stroke-width="2"/>
+                    <line x1="216" y1="130" x2="224" y2="130" stroke="#333" stroke-width="1"/>
+                </svg>
+            </div>
+
+            <div class="math-derivation">
+                <div class="step"><strong>步骤1：写出时域方程（基尔霍夫定律）</strong></div>
+                <div class="formula" style="background: white;">
+                    (V_in - V_out)/R = C·dV_out/dt
+                </div>
+
+                <div class="step"><strong>步骤2：拉普拉斯变换（关键：<span class="highlight">d/dt → s</span>）</strong></div>
+                <div class="formula" style="background: white;">
+                    (V_in(s) - V_out(s))/R = C·s·V_out(s)
+                </div>
+
+                <div class="step"><strong>步骤3：移项整理</strong></div>
+                <div class="formula" style="background: white;">
+                    V_in(s) = V_out(s)·(1 + RCs)
+                </div>
+
+                <div class="step"><strong>步骤4：得到传递函数</strong></div>
+                <div class="formula" style="background: #e8f5e9; color: #2e7d32; border-color: #4caf50;">
+                    G(s) = V_out(s)/V_in(s) = 1/(1 + RCs) = 1/(RCs + 1)
+                </div>
+
+                <div class="step"><strong>步骤5：物理解释</strong></div>
+                <ul style="margin-left: 30px; line-height: 2;">
+                    <li>极点：s = -1/(RC)（在左半平面，系统稳定）</li>
+                    <li>截止频率：ω_c = 1/(RC)</li>
+                    <li>低频时(s→0)：G(s)→1，信号通过✅</li>
+                    <li>高频时(s→∞)：G(s)→0，信号被滤除❌</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>🎯 如何用"s"思维思考问题？</h2>
+
+        <div class="success-box">
+            <h3>✅ 三步解题法</h3>
+            <ol style="line-height: 2; font-size: 1.1em; margin-left: 20px;">
+                <li><strong>写出时域微分方程</strong>（用物理定律：牛顿、基尔霍夫等）</li>
+                <li><strong>替换规则：</strong>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>d/dt → 乘s</li>
+                        <li>∫dt → 除以s</li>
+                        <li>f(t) → F(s)</li>
+                    </ul>
+                </li>
+                <li><strong>代数运算求G(s)</strong>（就像解普通方程）</li>
+            </ol>
+        </div>
+
+        <div class="warning-box">
+            <h3>❌ 常见错误</h3>
+            <ul style="line-height: 2; font-size: 1.1em; margin-left: 20px;">
+                <li><strong>错误1：</strong>把s当成普通数字（s是算子，有特殊意义）</li>
+                <li><strong>错误2：</strong>分不清s和jω（频率响应时才令s=jω）</li>
+                <li><strong>错误3：</strong>忘记零初始条件（拉普拉斯变换默认t<0时f(t)=0）</li>
+            </ul>
+        </div>
+
+        <h2>📖 终极记忆口诀</h2>
+
+        <div class="formula" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-size: 1.3em; border: none;">
+            s 就是 "求导算子"<br>
+            s² 就是 "二阶导"<br>
+            1/s 就是 "积分"<br>
+            s = jω 时看 "频率响应"<br>
+            s = σ + jω 是 "复频率"<br>
+            极点位置定 "稳定性"
+        </div>
+
+        <div style="background: #e8f5e9; padding: 30px; border-radius: 15px; margin-top: 30px; border: 3px solid #4caf50;">
+            <h3 style="color: #2e7d32; text-align: center; font-size: 1.5em;">🎓 学习建议</h3>
+            <ol style="line-height: 2.5; font-size: 1.15em; margin-left: 30px; margin-top: 15px;">
+                <li>不要死记公式，记住"<span class="highlight">微分→乘s，积分→除以s</span>"这个核心</li>
+                <li>多画s平面，用极点位置判断系统特性</li>
+                <li>做题时写清楚"时域→s域"的转换过程</li>
+                <li>频率响应时，永远记得<span class="highlight">s=jω</span></li>
+                <li>理解物理意义，别把自动控制当纯数学</li>
+            </ol>
+        </div>
+
+    </div>
+
+    <script>
+        // 演示1：信号波形
+        const signalCanvas = document.getElementById('signalCanvas');
+        const signalCtx = signalCanvas.getContext('2d');
+        const sigmaSlider = document.getElementById('sigmaSlider');
+        const omegaSlider = document.getElementById('omegaSlider');
+        const sigmaValue = document.getElementById('sigmaValue');
+        const omegaValue = document.getElementById('omegaValue');
+        const stability = document.getElementById('stability');
+
+        function drawSignal() {
+            const sigma = parseFloat(sigmaSlider.value);
+            const omega = parseFloat(omegaSlider.value);
+            sigmaValue.textContent = sigma.toFixed(1);
+            omegaValue.textContent = omega.toFixed(1);
+
+            const width = signalCanvas.width;
+            const height = signalCanvas.height;
+            signalCtx.clearRect(0, 0, width, height);
+
+            // 绘制坐标轴
+            signalCtx.strokeStyle = '#333';
+            signalCtx.lineWidth = 2;
+            signalCtx.beginPath();
+            signalCtx.moveTo(0, height/2);
+            signalCtx.lineTo(width, height/2);
+            signalCtx.stroke();
+
+            // 绘制网格
+            signalCtx.strokeStyle = '#e0e0e0';
+            signalCtx.lineWidth = 1;
+            for (let i = 0; i < width; i += 50) {
+                signalCtx.beginPath();
+                signalCtx.moveTo(i, 0);
+                signalCtx.lineTo(i, height);
+                signalCtx.stroke();
+            }
+            for (let i = 0; i < height; i += 50) {
+                signalCtx.beginPath();
+                signalCtx.moveTo(0, i);
+                signalCtx.lineTo(width, i);
+                signalCtx.stroke();
+            }
+
+            // 绘制信号 y = e^(σt) * sin(ωt)
+            signalCtx.strokeStyle = '#e74c3c';
+            signalCtx.lineWidth = 3;
+            signalCtx.beginPath();
+
+            const scale = 100;
+            const timeScale = 0.01;
+
+            for (let x = 0; x < width; x++) {
+                const t = x * timeScale;
+                const y = Math.exp(sigma * t) * Math.sin(omega * t);
+                const canvasY = height/2 - y * scale;
+
+                if (x === 0) {
+                    signalCtx.moveTo(x, canvasY);
+                } else {
+                    signalCtx.lineTo(x, canvasY);
+                }
+            }
+            signalCtx.stroke();
+
+            // 绘制包络线
+            signalCtx.strokeStyle = 'rgba(52, 152, 219, 0.5)';
+            signalCtx.lineWidth = 2;
+            signalCtx.setLineDash([5, 5]);
+            
+            // 上包络
+            signalCtx.beginPath();
+            for (let x = 0; x < width; x++) {
+                const t = x * timeScale;
+                const envelope = Math.exp(sigma * t);
+                const canvasY = height/2 - envelope * scale;
+                if (x === 0) signalCtx.moveTo(x, canvasY);
+                else signalCtx.lineTo(x, canvasY);
+            }
+            signalCtx.stroke();
+
+            // 下包络
+            signalCtx.beginPath();
+            for (let x = 0; x < width; x++) {
+                const t = x * timeScale;
+                const envelope = Math.exp(sigma * t);
+                const canvasY = height/2 + envelope * scale;
+                if (x === 0) signalCtx.moveTo(x, canvasY);
+                else signalCtx.lineTo(x, canvasY);
+            }
+            signalCtx.stroke();
+            signalCtx.setLineDash([]);
+
+            // 添加标签
+            signalCtx.font = 'bold 18px Arial';
+            signalCtx.fillStyle = '#e74c3c';
+            signalCtx.fillText(`y(t) = e^(${sigma}t) · sin(${omega}t)`, 20, 30);
+
+            signalCtx.fillStyle = '#3498db';
+            signalCtx.fillText('包络线: ±e^(σt)', 20, 60);
+
+            // 稳定性判断
+            if (sigma < 0) {
+                stability.innerHTML = '✅ 稳定系统（信号衰减，σ < 0）';
+                stability.style.background = '#d4edda';
+                stability.style.color = '#155724';
+            } else if (sigma > 0) {
+                stability.innerHTML = '❌ 不稳定系统（信号发散，σ > 0）';
+                stability.style.background = '#f8d7da';
+                stability.style.color = '#721c24';
+            } else {
+                stability.innerHTML = '⚠️ 临界稳定（信号等幅振荡，σ = 0）';
+                stability.style.background = '#fff3cd';
+                stability.style.color = '#856404';
+            }
+        }
+
+        sigmaSlider.addEventListener('input', drawSignal);
+        omegaSlider.addEventListener('input', drawSignal);
+        drawSignal();
+
+        // 演示2：s平面极点分布
+        const sPlaneCanvas = document.getElementById('sPlaneCanvas');
+        const sPlaneCtx = sPlaneCanvas.getContext('2d');
+        const poleInfo = document.getElementById('poleInfo');
+        let poles = [];
+
+        function drawSPlane() {
+            const width = sPlaneCanvas.width;
+            const height = sPlaneCanvas.height;
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            sPlaneCtx.clearRect(0, 0, width, height);
+
+            // 背景分区
+            sPlaneCtx.fillStyle = 'rgba(76, 175, 80, 0.1)';
+            sPlaneCtx.fillRect(0, 0, centerX, height);
+            sPlaneCtx.fillStyle = 'rgba(244, 67, 54, 0.1)';
+            sPlaneCtx.fillRect(centerX, 0, centerX, height);
+
+            // 网格
+            sPlaneCtx.strokeStyle = '#e0e0e0';
+            sPlaneCtx.lineWidth = 1;
+            for (let i = 0; i <= width; i += 50) {
+                sPlaneCtx.beginPath();
+                sPlaneCtx.moveTo(i, 0);
+                sPlaneCtx.lineTo(i, height);
+                sPlaneCtx.stroke();
+            }
+            for (let i = 0; i <= height; i += 50) {
+                sPlaneCtx.beginPath();
+                sPlaneCtx.moveTo(0, i);
+                sPlaneCtx.lineTo(width, i);
+                sPlaneCtx.stroke();
+            }
+
+            // 坐标轴
+            sPlaneCtx.strokeStyle = '#333';
+            sPlaneCtx.lineWidth = 3;
+            sPlaneCtx.beginPath();
+            sPlaneCtx.moveTo(0, centerY);
+            sPlaneCtx.lineTo(width, centerY);
+            sPlaneCtx.moveTo(centerX, 0);
+            sPlaneCtx.lineTo(centerX, height);
+            sPlaneCtx.stroke();
+
+            // 虚轴标注
+            sPlaneCtx.strokeStyle = '#2196f3';
+            sPlaneCtx.lineWidth = 2;
+            sPlaneCtx.setLineDash([10, 5]);
+            sPlaneCtx.beginPath();
+            sPlaneCtx.moveTo(centerX, 0);
+            sPlaneCtx.lineTo(centerX, height);
+            sPlaneCtx.stroke();
+            sPlaneCtx.setLineDash([]);
+
+            // 标签
+            sPlaneCtx.font = 'bold 20px Arial';
+            sPlaneCtx.fillStyle = '#333';
+            sPlaneCtx.fillText('实部 σ (Real)', width - 150, centerY - 20);
+            sPlaneCtx.fillText('虚部 jω (Imag)', centerX + 20, 30);
+
+            sPlaneCtx.font = 'bold 24px Arial';
+            sPlaneCtx.fillStyle = '#4caf50';
+            sPlaneCtx.fillText('稳定区域', 80, 50);
+            sPlaneCtx.fillText('(σ < 0)', 80, 80);
+
+            sPlaneCtx.fillStyle = '#f44336';
+            sPlaneCtx.fillText('不稳定区域', width - 200, 50);
+            sPlaneCtx.fillText('(σ > 0)', width - 200, 80);
+
+            // 绘制极点
+            poles.forEach(pole => {
+                const x = centerX + pole.sigma * 50;
+                const y = centerY - pole.omega * 50;
+
+                sPlaneCtx.fillStyle = pole.sigma < 0 ? '#4caf50' : '#f44336';
+                sPlaneCtx.beginPath();
+                sPlaneCtx.moveTo(x - 15, y);
+                sPlaneCtx.lineTo(x + 15, y);
+                sPlaneCtx.moveTo(x, y - 15);
+                sPlaneCtx.lineTo(x, y + 15);
+                sPlaneCtx.lineWidth = 4;
+                sPlaneCtx.stroke();
+
+                sPlaneCtx.beginPath();
+                sPlaneCtx.arc(x, y, 10, 0, 2 * Math.PI);
+                sPlaneCtx.fill();
+            });
+
+            // 更新信息
+            const stableCount = poles.filter(p => p.sigma < 0).length;
+            const unstableCount = poles.filter(p => p.sigma >= 0).length;
+            
+            if (poles.length === 0) {
+                poleInfo.innerHTML = '点击画布添加极点';
+                poleInfo.style.color = '#666';
+            } else {
+                poleInfo.innerHTML = `极点总数: ${poles.length} | ✅ 稳定: ${stableCount} | ❌ 不稳定: ${unstableCount}`;
+                poleInfo.style.color = unstableCount > 0 ? '#f44336' : '#4caf50';
+            }
+        }
+
+        sPlaneCanvas.addEventListener('click', (e) => {
+            const rect = sPlaneCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const centerX = sPlaneCanvas.width / 2;
+            const centerY = sPlaneCanvas.height / 2;
+
+            const sigma = (x - centerX) / 50;
+            const omega = (centerY - y) / 50;
+
+            poles.push({ sigma, omega });
+            drawSPlane();
+        });
+
+        function clearPoles() {
+            poles = [];
+            drawSPlane();
+        }
+
+        function addStablePole() {
+            const sigma = -Math.random() * 4 - 1;
+            const omega = (Math.random() - 0.5) * 8;
+            poles.push({ sigma, omega });
+            drawSPlane();
+        }
+
+        function addUnstablePole() {
+            const sigma = Math.random() * 4 + 0.5;
+            const omega = (Math.random() - 0.5) * 8;
+            poles.push({ sigma, omega });
+            drawSPlane();
+        }
+
+        drawSPlane();
+    </script>
+</body>
+</html>
