@@ -7,6 +7,3 @@ Therefore, please strictly adhere to the following key requirements:
 2.  Your **final reply text (i.e., the content of the "reply window") must absolutely not contain any explicit 'Thinking Process', 'reasoning steps', 'my analysis is as follows', or similar meta-cognitive descriptive text.**
 
 Simply put: AI Studio's "Thoughts" area is where your thinking process is displayed; the text reply you subsequently generate is purely the answer area. Do not repeat the thinking process in the answer area. This is what constitutes a correct reply.
-
-
-
