@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自动控制四大核心问题详解</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            font-size: 2.5em;
+            border-bottom: 4px solid #764ba2;
+            padding-bottom: 15px;
+        }
+        h2 {
+            color: #764ba2;
+            margin-top: 40px;
+            border-left: 6px solid #e74c3c;
+            padding-left: 15px;
+            font-size: 1.8em;
+        }
+        .question-box {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 25px 0;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+        .answer-box {
+            background: #e8f5e9;
+            border: 4px solid #4caf50;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        .formula {
+            background: #fff3cd;
+            border: 3px solid #ffc107;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            font-size: 1.4em;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+        .comparison {
+            display: flex;
+            gap: 20px;
+            margin: 25px 0;
+        }
+        .comp-item {
+            flex: 1;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        canvas {
+            display: block;
+            margin: 20px auto;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            background: white;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 35px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            font-size: 1.1em;
+        }
+        td {
+            border: 2px solid #dee2e6;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.05em;
+        }
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        .highlight {
+            background: #ffeb3b;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-weight: bold;
+            color: #d32f2f;
+        }
+        .key-point {
+            background: #e3f2fd;
+            border-left: 6px solid #2196f3;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-size: 1.15em;
+            line-height: 1.8;
+        }
+        .warning {
+            background: #ffebee;
+            border-left: 6px solid #f44336;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        code {
+            background: #f5f5f5;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #d32f2f;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 四大核心问题详解</h1>
+
+        <!-- 问题A -->
+        <h2>问题A：惯性环节</h2>
+        <div class="question-box">
+            ❓ 惯性环节对应的是 1/(Ts+1) 吗？
+        </div>
+        
+        <div class="answer-box">
+            <h3 style="color: #2e7d32; margin-top: 0;">✅ 答案：是的！</h3>
+            <div class="formula">
+                G(s) = 1/(Ts+1)
+            </div>
+            <p style="font-size: 1.2em; line-height: 1.8;">
+                这就是标准的<strong>一阶惯性环节</strong>（也叫一阶滞后环节）<br>
+                其中 T 是<span class="highlight">时间常数</span>
+            </p>
+        </div>
+
+        <div class="key-point">
+            <h3>💡 为什么叫"惯性"？</h3>
+            <p><strong>物理类比：</strong></p>
+            <ul style="line-height: 2;">
+                <li>🚗 汽车加速：踩油门后，速度不会立即达到，需要时间</li>
+                <li>🌡️ 温度计：插入热水，显示温度慢慢上升</li>
+                <li>⚡ RC电路：电容充电需要时间</li>
+            </ul>
+            <p><strong>数学本质：</strong>s在分母 → <span class="highlight">滞后</span></p>
+        </div>
+
+        <div style="background: #f8f9fa; padding: 25px; border-radius: 15px; margin: 20px 0;">
+            <h3>📊 惯性环节的响应曲线</h3>
+            <canvas id="inertiaCanvas" width="1200" height="400"></canvas>
+            <div class="controls">
+                <label>时间常数 T: <span id="tValue">1.0</span>s</label><br>
+                <input type="range" id="tSlider" min="0.5" max="5" step="0.1" value="1" style="width: 400px;">
+            </div>
+            <div class="formula">
+                阶跃响应: y(t) = 1 - e^(-t/T)<br>
+                特点：63.2%响应时间 = T，95%响应时间 ≈ 3T
+            </div>
+        </div>
+
+        <!-- 问题B -->
+        <h2>问题B：微分环节的分类</h2>
+        <div class="question-box">
+            ❓ 一阶微分环节对应的是 Ts+1 还是 Ts，亦或者是 s 呢？
+        </div>
+
+        <div class="answer-box">
+            <h3 style="color: #2e7d32; margin-top: 0;">✅ 答案：要区分三种情况！</h3>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>类型</th>
+                        <th>传递函数</th>
+                        <th>名称</th>
+                        <th>特点</th>
+                        <th>是否实用</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background: #ffebee;">
+                        <td><strong>理想微分</strong></td>
+                        <td><code>s</code></td>
+                        <td>纯微分</td>
+                        <td>完美但不现实</td>
+                        <td>❌ 物理不可实现</td>
+                    </tr>
+                    <tr style="background: #fff3e0;">
+                        <td><strong>比例微分</strong></td>
+                        <td><code>Ts</code></td>
+                        <td>带系数的微分</td>
+                        <td>s的T倍</td>
+                        <td>❌ 同样不可实现</td>
+                    </tr>
+                    <tr style="background: #e8f5e9;">
+                        <td><strong>一阶微分</strong></td>
+                        <td><code>Ts+1</code></td>
+                        <td>实际微分环节</td>
+                        <td>微分+比例</td>
+                        <td>✅ 工程常用</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="key-point">
+            <h3>🔍 深入理解：Ts+1 = ?</h3>
+            <div class="formula">
+                Ts + 1 = Ts + 1<br>
+                ↓拆分<br>
+                微分项(Ts) + 比例项(1)
+            </div>
+            <p style="font-size: 1.1em; line-height: 2;">
+                <strong>时域意义：</strong><br>
+                y(t) = T·dx/dt + x(t)<br><br>
+                
+                <strong>物理意义：</strong><br>
+                • <code>Ts</code> 部分：对变化敏感（预测）<br>
+                • <code>1</code> 部分：对当前值敏感（跟踪）<br>
+                • 合起来：既能预判又能跟踪
+            </p>
+        </div>
+
+        <div style="background: #f8f9fa; padding: 25px; border-radius: 15px; margin: 20px 0;">
+            <h3>📊 三种微分环节对比</h3>
+            <canvas id="diffCompareCanvas" width="1400" height="500"></canvas>
+            <p style="text-align: center; font-size: 1.1em; margin-top: 15px; color: #666;">
+                输入：正弦波 sin(t)
+            </p>
+        </div>
+
+        <!-- 问题C -->
+        <h2>问题C：积分环节消除稳态误差</h2>
+        <div class="question-box">
+            ❓ 为什么 1/(Ts) 的积分环节能"消除稳态误差"？
+        </div>
+
+        <div class="answer-box">
+            <h3 style="color: #2e7d32; margin-top: 0;">✅ 核心原理：积分 = 累积器</h3>
+        </div>
+
+        <div class="key-point">
+            <h3>💡 通俗解释</h3>
+            <p style="font-size: 1.2em; line-height: 2;">
+                <strong>场景：你要把水箱水位调到目标高度</strong><br><br>
+                
+                <strong>❌ 没有积分环节（只有比例）：</strong><br>
+                误差越小 → 阀门开得越小 → 最后阀门几乎关闭<br>
+                → 水位接近但永远到不了目标 → <span class="highlight">有稳态误差</span><br><br>
+                
+                <strong>✅ 有积分环节：</strong><br>
+                只要有误差 → 积分持续累积 → 控制量持续增大<br>
+                → 直到误差 = 0，积分才停止增长 → <span class="highlight">稳态误差为0</span>
+            </p>
+        </div>
+
+        <div style="background: #f8f9fa; padding: 25px; border-radius: 15px; margin: 20px 0;">
+            <h3>📊 可视化演示：积分如何消除稳态误差</h3>
+            <canvas id="integralErrorCanvas" width="1400" height="600"></canvas>
+            <div class="controls">
+                <button onclick="startErrorDemo()">▶️ 开始演示</button>
+                <button onclick="pauseErrorDemo()">⏸️ 暂停</button>
+                <button onclick="resetErrorDemo()">🔄 重置</button>
+            </div>
+        </div>
+
+        <div class="formula">
+            数学证明（简化版）：<br>
+            稳态误差 e<sub>ss</sub> = lim(s→0) s·E(s)<br>
+            如果系统包含 1/s（积分），则分母有s<br>
+            → e<sub>ss</sub> = 0
+        </div>
+
+        <div class="key-point">
+            <h3>🎯 记忆口诀</h3>
+            <div style="font-size: 1.3em; text-align: center; padding: 20px; background: white; border-radius: 10px; margin-top: 15px;">
+                <strong>积分 = 不达目的不罢休</strong><br>
+                <span style="color: #666; font-size: 0.9em;">只要有误差，就一直累积，直到误差归零</span>
+            </div>
+        </div>
+
+        <!-- 问题D -->
+        <h2>问题D：Ts+1 的优势</h2>
+        <div class="question-box">
+            ❓ 为什么 Ts+1 能"兼具微分和比例特性，避免纯微分的噪声放大"？
+        </div>
+
+        <div class="answer-box">
+            <h3 style="color: #2e7d32; margin-top: 0;">✅ 核心：纯微分s会"炸"，Ts+1更稳</h3>
+        </div>
+
+        <div class="comparison">
+            <div class="comp-item" style="background: #ffebee; border: 3px solid #f44336;">
+                <h3 style="color: #c62828; text-align: center;">❌ 纯微分 G(s)=s</h3>
+                <div class="formula" style="background: white;">
+                    频率响应：|G(jω)| = ω
+                </div>
+                <p style="line-height: 2;">
+                    <strong>问题：</strong><br>
+                    • 频率越高，放大倍数越大<br>
+                    • ω→∞ 时，增益→∞<br>
+                    • 高频噪声被<span class="highlight">无限放大</span><br>
+                    • 物理上<strong>不可实现</strong>
+                </p>
+            </div>
+
+            <div class="comp-item" style="background: #e8f5e9; border: 3px solid #4caf50;">
+                <h3 style="color: #2e7d32; text-align: center;">✅ 实际微分 G(s)=Ts+1</h3>
+                <div class="formula" style="background: white;">
+                    频率响应：|G(jω)| = √(T²ω²+1)
+                </div>
+                <p style="line-height: 2;">
+                    <strong>优势：</strong><br>
+                    • 低频：≈1（比例作用）<br>
+                    • 中频：≈Tω（微分作用）<br>
+                    • 高频：增益有上限<br>
+                    • 噪声<span class="highlight">不会爆炸</span>
+                </p>
+            </div>
+        </div>
+
+        <div style="background: #f8f9fa; padding: 25px; border-radius: 15px; margin: 20px 0;">
+            <h3>📊 频率响应对比（波特图）</h3>
+            <canvas id="bodeCanvas" width="1400" height="600"></canvas>
+            <p style="text-align: center; font-size: 1.1em; margin-top: 15px; color: #666;">
+                红色：纯微分s（增益无限增长）<br>
+                绿色：实际微分Ts+1（增益趋于平缓）
+            </p>
+        </div>
+
+        <div class="key-point">
+            <h3>💡 为什么 Ts+1 更好？</h3>
+            <div style="font-size: 1.15em; line-height: 2;">
+                <strong>1. 分解 Ts+1：</strong><br>
+                <div class="formula">
+                    Ts+1 在低频时 → 1（比例）<br>
+                    Ts+1 在高频时 → Ts（微分，但受限）
+                </div>
+
+                <strong>2. 实际意义：</strong><br>
+                • <code>1</code>项：保证稳定输出（不会在零输入时输出无穷）<br>
+                • <code>Ts</code>项：提供超前相位（改善动态性能）<br>
+                • 高频时增益不会无限增长（抑制噪声）<br><br>
+
+                <strong>3. 工程实现：</strong><br>
+                Ts+1 可以用 RC 电路实现，而纯微分 s 做不到！
+            </div>
+        </div>
+
+        <div class="warning">
+            <h3>⚠️ 为什么纯微分s不能用？</h3>
+            <table>
+                <tr>
+                    <th>问题</th>
+                    <th>纯微分 s</th>
+                    <th>实际微分 Ts+1</th>
+                </tr>
+                <tr>
+                    <td><strong>常值输入</strong></td>
+                    <td>输出=0（丢失信息）</td>
+                    <td>输出=输入（保留信息）</td>
+                </tr>
+                <tr>
+                    <td><strong>高频噪声</strong></td>
+                    <td>放大至无穷大</td>
+                    <td>放大倍数有限</td>
+                </tr>
+                <tr>
+                    <td><strong>物理实现</strong></td>
+                    <td>❌ 不可能</td>
+                    <td>✅ 可以（RC电路）</td>
+                </tr>
+                <tr>
+                    <td><strong>稳定性</strong></td>
+                    <td>极点在原点（临界）</td>
+                    <td>零点在左半平面（稳定）</td>
+                </tr>
+            </table>
+        </div>
+
+        <h2>📚 四个问题总结</h2>
+
+        <table style="margin-top: 30px;">
+            <thead>
+                <tr>
+                    <th>问题</th>
+                    <th>答案</th>
+                    <th>核心要点</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>A. 惯性环节</strong></td>
+                    <td><code>1/(Ts+1)</code></td>
+                    <td>s在分母→滞后→响应慢</td>
+                </tr>
+                <tr>
+                    <td><strong>B. 微分环节</strong></td>
+                    <td>
+                        <code>s</code>：理想（不可实现）<br>
+                        <code>Ts</code>：比例微分<br>
+                        <code>Ts+1</code>：实际微分✅
+                    </td>
+                    <td>Ts+1 = 微分+比例</td>
+                </tr>
+                <tr>
+                    <td><strong>C. 消除误差</strong></td>
+                    <td>积分环节 <code>1/s</code></td>
+                    <td>累积误差直到归零</td>
+                </tr>
+                <tr>
+                    <td><strong>D. 避免噪声</strong></td>
+                    <td><code>Ts+1</code> 比 <code>s</code> 好</td>
+                    <td>高频增益有限，能实现</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 15px; margin-top: 40px; text-align: center;">
+            <h2 style="margin: 0 0 20px 0;">🎯 终极记忆</h2>
+            <div style="font-size: 1.3em; line-height: 2.5;">
+                <strong>1/(Ts+1)</strong> → 惯性慢吞吞<br>
+                <strong>Ts+1</strong> → 微分加比例，实际能用<br>
+                <strong>1/s</strong> → 积分累积误差，不达目的不罢休<br>
+                <strong>s</strong> → 纯微分是理想，现实中别想<br>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // 问题A：惯性环节响应
+        const inertiaCanvas = document.getElementById('inertiaCanvas');
+        const inertiaCtx = inertiaCanvas.getContext('2d');
+        const tSlider = document.getElementById('tSlider');
+        const tValue = document.getElementById('tValue');
+
+        function drawInertiaResponse() {
+            const T = parseFloat(tSlider.value);
+            tValue.textContent = T.toFixed(1);
+
+            const width = inertiaCanvas.width;
+            const height = inertiaCanvas.height;
+            inertiaCtx.clearRect(0, 0, width, height);
+
+            // 绘制坐标轴
+            drawAxes(inertiaCtx, width, height);
+
+            // 绘制阶跃输入
+            inertiaCtx.strokeStyle = '#2196f3';
+            inertiaCtx.lineWidth = 3;
+            inertiaCtx.setLineDash([5, 5]);
+            inertiaCtx.beginPath();
+            inertiaCtx.moveTo(50, height - 80);
+            inertiaCtx.lineTo(50, height - 280);
+            inertiaCtx.lineTo(width - 50, height - 280);
+            inertiaCtx.stroke();
+            inertiaCtx.setLineDash([]);
+
+            // 绘制惯性响应
+            inertiaCtx.strokeStyle = '#f44336';
+            inertiaCtx.lineWidth = 4;
+            inertiaCtx.beginPath();
+            
+            const timeScale = (width - 100) / (5 * T);
+            const ampScale = 200;
+
+            for (let t = 0; t <= 5 * T; t += 0.01) {
+                const x = 50 + t * timeScale;
+                const y_val = 1 - Math.exp(-t / T);
+                const y = height - 80 - y_val * ampScale;
+                
+                if (t === 0) {
+                    inertiaCtx.moveTo(x, height - 80);
+                } else {
+                    inertiaCtx.lineTo(x, y);
+                }
+            }
+            inertiaCtx.stroke();
+
+            // 标注关键点
+            const t_63 = T * timeScale;
+            const t_95 = 3 * T * timeScale;
+
+            // 63.2% 线
+            inertiaCtx.strokeStyle = '#4caf50';
+            inertiaCtx.lineWidth = 2;
+            inertiaCtx.setLineDash([5, 5]);
+            inertiaCtx.beginPath();
+            inertiaCtx.moveTo(50, height - 80 - 0.632 * ampScale);
+            inertiaCtx.lineTo(width - 50, height - 80 - 0.632 * ampScale);
+            inertiaCtx.stroke();
+
+            // T 时刻竖线
+            inertiaCtx.beginPath();
+            inertiaCtx.moveTo(50 + t_63, height - 80);
+            inertiaCtx.lineTo(50 + t_63, height - 80 - 0.632 * ampScale);
+            inertiaCtx.stroke();
+            inertiaCtx.setLineDash([]);
+
+            // 标签
+            inertiaCtx.fillStyle = '#2196f3';
+            inertiaCtx.font = 'bold 16px Arial';
+            inertiaCtx.fillText('输入（阶跃）', width - 150, height - 290);
+
+            inertiaCtx.fillStyle = '#f44336';
+            inertiaCtx.fillText('输出（惯性响应）', width - 200, height - 100);
+
+            inertiaCtx.fillStyle = '#4caf50';
+            inertiaCtx.fillText('63.2%', 10, height - 80 - 0.632 * ampScale);
+            inertiaCtx.fillText(`t = T = ${T.toFixed(1)}s`, 50 + t_63 - 40, height - 60);
+        }
+
+        tSlider.addEventListener('input', drawInertiaResponse);
+        drawInertiaResponse();
+
+        // 问题B：微分环节对比
+        const diffCompareCanvas = document.getElementById('diffCompareCanvas');
+        const diffCompareCtx = diffCompareCanvas.getContext('2d');
+
+        function drawDiffComparison() {
+            const width = diffCompareCanvas.width;
+            const height = diffCompareCanvas.height;
+            diffCompareCtx.clearRect(0, 0, width, height);
+
+            const partWidth = width / 4;
+            const centerY = height / 2;
+            const amplitude = 100;
+
+            // 输入信号
+            diffCompareCtx.font = 'bold 18px Arial';
+            diffCompareCtx.fillStyle = '#333';
+            diffCompareCtx.textAlign = 'center';
+            diffCompareCtx.fillText('输入: sin(t)', partWidth / 2, 30);
+
+            diffCompareCtx.strokeStyle = '#2196f3';
+            diffCompareCtx.lineWidth = 3;
+            diffCompareCtx.beginPath();
+            for (let x = 0; x < partWidth - 20; x += 2) {
+                const t = (x / (partWidth - 20)) * 4 * Math.PI;
+                const y = centerY - Math.sin(t) * amplitude;
+                if (x === 0) diffCompareCtx.moveTo(10 + x, y);
+                else diffCompareCtx.lineTo(10 + x, y);
+            }
+            diffCompareCtx.stroke();
+
+            // s (纯微分)
+            diffCompareCtx.fillStyle = '#f44336';
+            diffCompareCtx.fillText('G(s) = s', partWidth + partWidth / 2, 30);
+            diffCompareCtx.font = '14px Arial';
+            diffCompareCtx.fillText('(纯微分❌)', partWidth + partWidth / 2, 50);
+
+            diffCompareCtx.strokeStyle = '#f44336';
+            diffCompareCtx.lineWidth = 3;
+            diffCompareCtx.beginPath();
+            for (let x = 0; x < partWidth - 20; x += 2) {
+                const t = (x / (partWidth - 20)) * 4 * Math.PI;
+                const y = centerY - Math.cos(t) * amplitude; // 微分: cos(t)
+                diffCompareCtx.lineTo(partWidth + 10 + x, y);
+            }
+            diffCompareCtx.stroke();
+
+            // Ts
+            diffCompareCtx.fillStyle = '#ff9800';
+            diffCompareCtx.font = 'bold 18px Arial';
+            diffCompareCtx.fillText('G(s) = Ts', partWidth * 2 + partWidth / 2, 30);
+            diffCompareCtx.font = '14px Arial';
+            diffCompareCtx.fillText('(比例微分❌)', partWidth * 2 + partWidth / 2, 50);
+
+            diffCompareCtx.strokeStyle = '#ff9800';
+            diffCompareCtx.lineWidth = 3;
+            diffCompareCtx.beginPath();
+            for (let x = 0; x < partWidth - 20; x += 2) {
+                const t = (x / (partWidth - 20)) * 4 * Math.PI;
+                const T = 2;
+                const y = centerY - T * Math.cos(t) * amplitude / 2; // T倍微分
+                diffCompareCtx.lineTo(partWidth * 2 + 10 + x, y);
+            }
+            diffCompareCtx.stroke();
+
+            // Ts+1
+            diffCompareCtx.fillStyle = '#4caf50';
+            diffCompareCtx.font = 'bold 18px Arial';
+            diffCompareCtx.fillText('G(s) = Ts+1', partWidth * 3 + partWidth / 2, 30);
+            diffCompareCtx.font = '14px Arial';
+            diffCompareCtx.fillText('(实际微分✅)', partWidth * 3 + partWidth / 2, 50);
+
+            diffCompareCtx.strokeStyle = '#4caf50';
+            diffCompareCtx.lineWidth = 3;
+            diffCompareCtx.beginPath();
+            for (let x = 0; x < partWidth - 20; x += 2) {
+                const t = (x / (partWidth - 20)) * 4 * Math.PI;
+                const T = 2;
+                const y_val = T * Math.cos(t) + Math.sin(t); // Ts + 1
+                const y = centerY - y_val * amplitude / 3;
+                diffCompareCtx.lineTo(partWidth * 3 + 10 + x, y);
+            }
+            diffCompareCtx.stroke();
+
+            // 画分隔线
+            diffCompareCtx.strokeStyle = '#ddd';
+            diffCompareCtx.lineWidth = 2;
+            for (let i = 1; i < 4; i++) {
+                diffCompareCtx.beginPath();
+                diffCompareCtx.moveTo(partWidth * i, 0);
+                diffCompareCtx.lineTo(partWidth * i, height);
+                diffCompareCtx.stroke();
+            }
+        }
+
+        drawDiffComparison();
+
+        // 问题C：积分消除误差
+        const integralErrorCanvas = document.getElementById('integralErrorCanvas');
+        const integralErrorCtx = integralErrorCanvas.getContext('2d');
+        let errorTime = 0;
+        let errorAnimationId = null;
+
+        function drawErrorDemo() {
+            const width = integralErrorCanvas.width;
+            const height = integralErrorCanvas.height;
+            integralErrorCtx.clearRect(0, 0, width, height);
+
+            const plotHeight = height / 3;
+
+            // 分成三个图：误差、积分输出、总输出
+            const plots = [
+                { title: '误差 e(t)', y: 0, color: '#f44336' },
+                { title: '积分输出 ∫e dt', y: plotHeight, color: '#2196f3' },
+                { title: '系统输出（趋向目标）', y: plotHeight * 2, color: '#4caf50' }
+            ];
+
+            plots.forEach((plot, idx) => {
+                integralErrorCtx.strokeStyle = '#ddd';
+                integralErrorCtx.lineWidth = 1;
+                integralErrorCtx.beginPath();
+                integralErrorCtx.moveTo(0, plot.y + plotHeight);
+                integralErrorCtx.lineTo(width, plot.y + plotHeight);
+                integralErrorCtx.stroke();
+
+                integralErrorCtx.fillStyle = '#333';
+                integralErrorCtx.font = 'bold 18px Arial';
+                integralErrorCtx.fillText(plot.title, 20, plot.y + 25);
+            });
+
+            const timeScale = 2;
+            const target = 1;
+            const Kp = 0.5; // 比例系数
+            const Ki = 0.3; // 积分系数
+
+            integralErrorCtx.strokeStyle = '#f44336';
+            integralErrorCtx.lineWidth = 3;
+            integralErrorCtx.beginPath();
+
+            let integral = 0;
+            let output = 0;
+
+            for (let t = 0; t <= errorTime && t <= 500; t += 1) {
+                const error = target - output;
+                integral += error * 0.01;
+                output = Kp * error + Ki * integral;
+
+                const x = 100 + t * timeScale;
+
+                // 画误差
+                integralErrorCtx.strokeStyle = '#f44336';
+                if (t === 0) {
+                    integralErrorCtx.beginPath();
+                    integralErrorCtx.moveTo(x, plotHeight / 2 - error * 150);
+                } else {
+                    integralErrorCtx.lineTo(x, plotHeight / 2 - error * 150);
+                }
+            }
+            integralErrorCtx.stroke();
+
+            // 重新计算画积分
+            integral = 0;
+            output = 0;
+            integralErrorCtx.strokeStyle = '#2196f3';
+            integralErrorCtx.beginPath();
+            for (let t = 0; t <= errorTime && t <= 500; t += 1) {
+                const error = target - output;
+                integral += error * 0.01;
+                output = Kp * error + Ki * integral;
+
+                const x = 100 + t * timeScale;
+                if (t === 0) {
+                    integralErrorCtx.moveTo(x, plotHeight + plotHeight / 2 - integral * 50);
+                } else {
+                    integralErrorCtx.lineTo(x, plotHeight + plotHeight / 2 - integral * 50);
+                }
+            }
+            integralErrorCtx.stroke();
+
+            // 画输出
+            integral = 0;
+            output = 0;
+            integralErrorCtx.strokeStyle = '#4caf50';
+            integralErrorCtx.lineWidth = 4;
+            integralErrorCtx.beginPath();
+            for (let t = 0; t <= errorTime && t <= 500; t += 1) {
+                const error = target - output;
+                integral += error * 0.01;
+                output = Kp * error + Ki * integral;
+
+                const x = 100 + t * timeScale;
+                if (t === 0) {
+                    integralErrorCtx.moveTo(x, plotHeight * 2 + plotHeight / 2 - output * 150);
+                } else {
+                    integralErrorCtx.lineTo(x, plotHeight * 2 + plotHeight / 2 - output * 150);
+                }
+            }
+            integralErrorCtx.stroke();
+
+            // 目标线
+            integralErrorCtx.strokeStyle = '#ff9800';
+            integralErrorCtx.lineWidth = 2;
+            integralErrorCtx.setLineDash([5, 5]);
+            integralErrorCtx.beginPath();
+            integralErrorCtx.moveTo(100, plotHeight * 2 + plotHeight / 2 - target * 150);
+            integralErrorCtx.lineTo(width - 50, plotHeight * 2 + plotHeight / 2 - target * 150);
+            integralErrorCtx.stroke();
+            integralErrorCtx.setLineDash([]);
+
+            integralErrorCtx.fillStyle = '#ff9800';
+            integralErrorCtx.font = '16px Arial';
+            integralErrorCtx.fillText('目标值', width - 100, plotHeight * 2 + plotHeight / 2 - target * 150 - 10);
+
+            // 时间标注
+            integralErrorCtx.fillStyle = '#333';
+            integralErrorCtx.font = '20px Arial';
+            integralErrorCtx.fillText(`时间: ${(errorTime / 10).toFixed(1)}s`, width / 2 - 50, height - 10);
+        }
+
+        function animateError() {
+            if (errorTime < 500) {
+                errorTime += 1;
+            }
+            drawErrorDemo();
+            errorAnimationId = requestAnimationFrame(animateError);
+        }
+
+        function startErrorDemo() {
+            if (!errorAnimationId) animateError();
+        }
+
+        function pauseErrorDemo() {
+            if (errorAnimationId) {
+                cancelAnimationFrame(errorAnimationId);
+                errorAnimationId = null;
+            }
+        }
+
+        function resetErrorDemo() {
+            pauseErrorDemo();
+            errorTime = 0;
+            drawErrorDemo();
+        }
+
+        drawErrorDemo();
+
+        // 问题D：波特图对比
+        const bodeCanvas = document.getElementById('bodeCanvas');
+        const bodeCtx = bodeCanvas.getContext('2d');
+
+        function drawBodePlot() {
+            const width = bodeCanvas.width;
+            const height = bodeCanvas.height;
+            bodeCtx.clearRect(0, 0, width, height);
+
+            const plotHeight = height / 2;
+
+            // 幅频特性
+            bodeCtx.fillStyle = '#333';
+            bodeCtx.font = 'bold 20px Arial';
+            bodeCtx.fillText('幅频特性（对数坐标）', 20, 30);
+
+            // 绘制坐标轴
+            bodeCtx.strokeStyle = '#999';
+            bodeCtx.lineWidth = 2;
+            bodeCtx.beginPath();
+            bodeCtx.moveTo(100, plotHeight - 50);
+            bodeCtx.lineTo(width - 50, plotHeight - 50);
+            bodeCtx.moveTo(100, 50);
+            bodeCtx.lineTo(100, plotHeight - 50);
+            bodeCtx.stroke();
+
+            // 绘制 s (纯微分)
+            bodeCtx.strokeStyle = '#f44336';
+            bodeCtx.lineWidth = 4;
+            bodeCtx.beginPath();
+            for (let logOmega = -2; logOmega <= 2; logOmega += 0.01) {
+                const omega = Math.pow(10, logOmega);
+                const gain_dB = 20 * Math.log10(omega); // |s| = ω
+                
+                const x = 100 + (logOmega + 2) * (width - 150) / 4;
+                const y = plotHeight - 50 - gain_dB * 3;
+                
+                if (logOmega === -2) {
+                    bodeCtx.moveTo(x, y);
+                } else {
+                    bodeCtx.lineTo(x, y);
+                }
+            }
+            bodeCtx.stroke();
+
+            // 绘制 Ts+1
+            const T = 1;
+            bodeCtx.strokeStyle = '#4caf50';
+            bodeCtx.lineWidth = 4;
+            bodeCtx.beginPath();
+            for (let logOmega = -2; logOmega <= 2; logOmega += 0.01) {
+                const omega = Math.pow(10, logOmega);
+                const gain = Math.sqrt(T * T * omega * omega + 1);
+                const gain_dB = 20 * Math.log10(gain);
+                
+                const x = 100 + (logOmega + 2) * (width - 150) / 4;
+                const y = plotHeight - 50 - gain_dB * 3;
+                
+                if (logOmega === -2) {
+                    bodeCtx.moveTo(x, y);
+                } else {
+                    bodeCtx.lineTo(x, y);
+                }
+            }
+            bodeCtx.stroke();
+
+            // 标签
+            bodeCtx.fillStyle = '#f44336';
+            bodeCtx.font = 'bold 18px Arial';
+            bodeCtx.fillText('G(s) = s (无限增长❌)', width - 300, 80);
+
+            bodeCtx.fillStyle = '#4caf50';
+            bodeCtx.fillText('G(s) = Ts+1 (趋于平缓✅)', width - 350, 250);
+
+            // 横轴标签
+            bodeCtx.fillStyle = '#333';
+            bodeCtx.font = '14px Arial';
+            bodeCtx.textAlign = 'center';
+            for (let i = -2; i <= 2; i++) {
+                const x = 100 + (i + 2) * (width - 150) / 4;
+                bodeCtx.fillText(`10^${i}`, x, plotHeight - 30);
+            }
+            bodeCtx.fillText('频率 ω (rad/s)', width / 2, plotHeight - 5);
+
+            // 相频特性
+            bodeCtx.textAlign = 'left';
+            bodeCtx.fillStyle = '#333';
+            bodeCtx.font = 'bold 20px Arial';
+            bodeCtx.fillText('相频特性', 20, plotHeight + 30);
+
+            // 坐标轴
+            bodeCtx.strokeStyle = '#999';
+            bodeCtx.lineWidth = 2;
+            bodeCtx.beginPath();
+            bodeCtx.moveTo(100, height - 50);
+            bodeCtx.lineTo(width - 50, height - 50);
+            bodeCtx.moveTo(100, plotHeight + 50);
+            bodeCtx.lineTo(100, height - 50);
+            bodeCtx.stroke();
+
+            // s 的相位 (恒为90°)
+            bodeCtx.strokeStyle = '#f44336';
+            bodeCtx.lineWidth = 4;
+            bodeCtx.beginPath();
+            const phase_s = 90;
+            const y_s = height - 50 - phase_s * 2;
+            bodeCtx.moveTo(100, y_s);
+            bodeCtx.lineTo(width - 50, y_s);
+            bodeCtx.stroke();
+
+            // Ts+1 的相位
+            bodeCtx.strokeStyle = '#4caf50';
+            bodeCtx.lineWidth = 4;
+            bodeCtx.beginPath();
+            for (let logOmega = -2; logOmega <= 2; logOmega += 0.01) {
+                const omega = Math.pow(10, logOmega);
+                const phase = Math.atan(T * omega) * 180 / Math.PI;
+                
+                const x = 100 + (logOmega + 2) * (width - 150) / 4;
+                const y = height - 50 - phase * 2;
+                
+                if (logOmega === -2) {
+                    bodeCtx.moveTo(x, y);
+                } else {
+                    bodeCtx.lineTo(x, y);
+                }
+            }
+            bodeCtx.stroke();
+
+            // 横轴标签
+            bodeCtx.fillStyle = '#333';
+            bodeCtx.font = '14px Arial';
+            bodeCtx.textAlign = 'center';
+            for (let i = -2; i <= 2; i++) {
+                const x = 100 + (i + 2) * (width - 150) / 4;
+                bodeCtx.fillText(`10^${i}`, x, height - 30);
+            }
+            bodeCtx.fillText('频率 ω (rad/s)', width / 2, height - 5);
+        }
+
+        drawBodePlot();
+
+        // 辅助函数
+        function drawAxes(ctx, width, height) {
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(50, height - 80);
+            ctx.lineTo(width - 50, height - 80);
+            ctx.moveTo(50, 50);
+            ctx.lineTo(50, height - 80);
+            ctx.stroke();
+
+            // 箭头
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.moveTo(width - 50, height - 80);
+            ctx.lineTo(width - 60, height - 85);
+            ctx.lineTo(width - 60, height - 75);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(50, 50);
+            ctx.lineTo(45, 60);
+            ctx.lineTo(55, 60);
+            ctx.closePath();
+            ctx.fill();
+        }
+    </script>
+</body>
+</html>
