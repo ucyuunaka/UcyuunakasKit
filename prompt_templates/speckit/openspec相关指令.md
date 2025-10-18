@@ -110,24 +110,24 @@ openspec archive add-user-login --yes
 
 ## 常用命令速查
 
-| 命令 | 说明 |
-|------|------|
-| `openspec list` | 列出所有活动变更 |
-| `openspec view` | 交互式仪表板 |
-| `openspec show <变更名>` | 显示变更详情 |
-| `openspec validate <变更名>` | 验证格式 |
-| `openspec archive <变更名> --yes` | 归档变更（无交互） |
-| `openspec update` | 更新 AI 指令（切换工具时使用） |
+| 命令                           | 说明                |
+| ---------------------------- | ----------------- |
+| openspec list                | 列出所有活动变更          |
+| openspec view                | 交互式仪表板            |
+| openspec show <变更名>          | 显示变更详情            |
+| openspec validate <变更名>      | 验证格式              |
+| openspec archive <变更名> --yes | 归档变更（无交互）         |
+| openspec update              | 更新 AI 指令（切换工具时使用） |
 
 ---
 
 ## Claude Code 专属快捷命令
 
-| 快捷命令 | 完整说明 |
-|----------|----------|
-| `/openspec:proposal <描述>` | 创建新的变更提案 |
-| `/openspec:apply <变更名>` | 应用/实施指定变更 |
-| `/openspec:archive <变更名>` | 归档已完成的变更 |
+| 快捷命令                    | 完整说明      |
+| ----------------------- | --------- |
+| /openspec:proposal <描述> | 创建新的变更提案  |
+| /openspec:apply <变更名>   | 应用/实施指定变更 |
+| /openspec:archive <变更名> | 归档已完成的变更  |
 
 ---
 
