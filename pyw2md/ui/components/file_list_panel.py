@@ -215,6 +215,29 @@ class FileListPanel(Card):
     
     def _build_file_list(self, parent):
         """构建文件列表（树状视图）- 性能优化版"""
+
+        # ========== 调试代码开始 ==========
+        import tkinter as tk
+        scaling_factor = DPIHelper.get_scaling_factor()
+        font_config = MD.get_font_ui(scaling_factor)
+        
+        print("=" * 60)
+        print("DPI诊断信息")
+        print("=" * 60)
+        print(f"系统DPI: {DPIHelper.get_system_dpi()}")
+        print(f"缩放因子: {scaling_factor}")
+        print(f"字体配置: {font_config}")
+        print(f"基础行高: 18")
+        print(f"计算后行高: {DPIHelper.scale_value(18, scaling_factor)}")
+        print(f"字体高度: {font_config[1]}")
+        print(f"最小行高: {int(font_config[1] * 1.5)}")
+        
+        # 测试tkinter实际如��渲染字体
+        test_font = tk.font.Font(family=font_config[0], size=font_config[1])
+        actual_height = test_font.metrics('linespace')
+        print(f"Tkinter实际字体行高: {actual_height} 像素")
+        print("=" * 60)
+
         # 列表容器
         list_container = ctk.CTkFrame(parent, fg_color=MD.SURFACE)
         list_container.pack(fill='both', expand=True, pady=(0, MD.PAD_M))
