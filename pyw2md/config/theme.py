@@ -2,6 +2,8 @@
 简化主题 - Catppuccin Mocha启发
 实用主题 - 高对比度深色
 """
+from typing import Optional, Tuple
+from utils.dpi_helper import DPIHelper
 
 class MD:
     # 背景（3级足够）- 添加向后兼容别名
@@ -35,10 +37,13 @@ class MD:
     # 圆角（1个足够）
     RADIUS = 4
 
-    # 字体
-    FONT_MONO = ("Cascadia Code", 9)  # 更现代的等宽字体
-    FONT_UI = ("Segoe UI", 9)
-    FONT_TITLE = ("Segoe UI Semibold", 10)
+    # 基础字体大小（未缩放）
+    _BASE_FONT_MONO_SIZE = 9
+    _BASE_FONT_UI_SIZE = 9
+    _BASE_FONT_TITLE_SIZE = 10
+    _BASE_FONT_HEADLINE_SIZE = 12
+    _BASE_FONT_BODY_SIZE = 10
+    _BASE_FONT_LABEL_SIZE = 9
 
     # Material Design 向后兼容性 - 添加缺失的颜色常量
     ON_SURFACE = "#CDD6F4"      # 表面文字色
@@ -70,6 +75,90 @@ class MD:
 
     # 间距常量（向后兼容）
     SPACING_XS = 4              # 极小间距
+
+    @staticmethod
+    def get_font_mono(scaling_factor: Optional[float] = None) -> Tuple[str, int]:
+        """获取等宽字体（支持DPI缩放）"""
+        size = DPIHelper.scale_font_size(
+            MD._BASE_FONT_MONO_SIZE,
+            scaling_factor,
+            min_size=8,
+            max_size=24
+        )
+        return ("Cascadia Code", size)
+
+    @staticmethod
+    def get_font_ui(scaling_factor: Optional[float] = None) -> Tuple[str, int]:
+        """获取UI字体（支持DPI缩放）"""
+        size = DPIHelper.scale_font_size(
+            MD._BASE_FONT_UI_SIZE,
+            scaling_factor,
+            min_size=8,
+            max_size=24
+        )
+        return ("Segoe UI", size)
+
+    @staticmethod
+    def get_font_title(scaling_factor: Optional[float] = None) -> Tuple[str, int]:
+        """获取标题字体（支持DPI缩放）"""
+        size = DPIHelper.scale_font_size(
+            MD._BASE_FONT_TITLE_SIZE,
+            scaling_factor,
+            min_size=8,
+            max_size=24
+        )
+        return ("Segoe UI Semibold", size)
+
+    @staticmethod
+    def get_font_headline(scaling_factor: Optional[float] = None) -> Tuple[str, int]:
+        """获取大标题字体（支持DPI缩放）"""
+        size = DPIHelper.scale_font_size(
+            MD._BASE_FONT_HEADLINE_SIZE,
+            scaling_factor,
+            min_size=10,
+            max_size=32
+        )
+        return ("Segoe UI Semibold", size)
+
+    @staticmethod
+    def get_font_body(scaling_factor: Optional[float] = None) -> Tuple[str, int]:
+        """获取正文字体（支持DPI缩放）"""
+        size = DPIHelper.scale_font_size(
+            MD._BASE_FONT_BODY_SIZE,
+            scaling_factor,
+            min_size=8,
+            max_size=24
+        )
+        return ("Segoe UI", size)
+
+    @staticmethod
+    def get_font_label(scaling_factor: Optional[float] = None) -> Tuple[str, int]:
+        """获取标签字体（支持DPI缩放）"""
+        size = DPIHelper.scale_font_size(
+            MD._BASE_FONT_LABEL_SIZE,
+            scaling_factor,
+            min_size=8,
+            max_size=24
+        )
+        return ("Segoe UI", size)
+
+    # 向后兼容的静态字体定义（已废弃，建议使用动态方法）
+    FONT_MONO = ("Cascadia Code", 9)  # 已废弃，使用 get_font_mono()
+    FONT_UI = ("Segoe UI", 9)  # 已废弃，使用 get_font_ui()
+    FONT_TITLE = ("Segoe UI Semibold", 10)  # 已废弃，使用 get_font_title()
+    FONT_HEADLINE = ("Segoe UI Semibold", 12)  # 已废弃，使用 get_font_headline()
+    FONT_BODY = ("Segoe UI", 10)  # 已废弃，使用 get_font_body()
+    FONT_LABEL = ("Segoe UI", 9)  # 已废弃，使用 get_font_label()
+
+    @staticmethod
+    def scale_padding(padding: int, scaling_factor: Optional[float] = None) -> int:
+        """缩放间距值"""
+        return DPIHelper.scale_value(padding, scaling_factor)
+
+    @staticmethod
+    def scale_radius(radius: int, scaling_factor: Optional[float] = None) -> int:
+        """缩放圆角值"""
+        return DPIHelper.scale_value(radius, scaling_factor)
 
 # 快捷访问保持不变
 MD = MD

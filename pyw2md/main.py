@@ -22,6 +22,7 @@ def main():
 
     功能说明：
     - 配置CustomTkinter的主题和外观模式
+    - 设置DPI感知，确保在高DPI显示器上清晰显示
     - 创建MaterialApp应用实例
     - 启动应用主循环
 
@@ -29,7 +30,46 @@ def main():
     - 将UI配置集中在此处，便于统一管理
     - 使用深色模式减少眼部疲劳，适合长时间编码工作
     - 蓝色主题提供专业的开发环境氛围
+    - DPI感知设置必须在任何UI创建之前完成
     """
+    # 导入DPI相关模块（在函数内部导入避免循环依赖）
+    from utils.dpi_helper import set_dpi_awareness, get_dpi_helper
+    from config.settings import Settings
+    import logging
+
+    # 配置日志
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logger = logging.getLogger(__name__)
+
+    # 设置DPI感知（必须在任何UI创建之前调用）
+    logger.info("Setting DPI awareness...")
+    if set_dpi_awareness():
+        logger.info("DPI awareness set successfully")
+
+        # 检测并记录系统DPI信息
+        dpi_helper = get_dpi_helper()
+        dpi_x, dpi_y = dpi_helper.get_system_dpi()
+        scaling_factor = dpi_helper.get_scaling_factor()
+        logger.info(f"System DPI: {dpi_x}x{dpi_y}, Scaling factor: {scaling_factor}")
+    else:
+        logger.warning("Failed to set DPI awareness, continuing with default settings")
+
+    # 加载配置以获取DPI设置
+    try:
+        settings = Settings()
+        dpi_config = settings.get("dpi_scaling", {})
+
+        # 如果禁用自动检测，使用配置的缩放因子
+        if not dpi_config.get("auto_detect", True):
+            manual_factor = dpi_config.get("scaling_factor", 1.0)
+            if manual_factor != 1.0:
+                logger.info(f"Using manual DPI scaling factor: {manual_factor}")
+                # 更新DPI助手的缩放因子
+                dpi_helper = get_dpi_helper()
+                dpi_helper._scaling_factor = manual_factor
+    except Exception as e:
+        logger.error(f"Failed to load DPI settings: {e}")
+
     # 设置应用外观模式为深色，提供舒适的编码环境
     ctk.set_appearance_mode("dark")
 
