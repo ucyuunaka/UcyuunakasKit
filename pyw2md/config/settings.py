@@ -75,5 +75,11 @@ class Settings:
                 "scaling_factor": 1.0,  # 手动缩放因子（当auto_detect为False时使用）
                 "min_font_size": 8,  # 最小字体大小
                 "max_font_size": 24  # 最大字体大小
+            },
+            "column_widths": {  # 文件列表列宽配置
+                "path": 400,  # 文件路径列宽度
+                "status": 50,  # 状态列宽度
+                "language": 80,  # 语言列宽度
+                "size": 70  # 大小列宽度
             }
         }

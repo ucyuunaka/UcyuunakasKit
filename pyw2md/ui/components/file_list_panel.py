@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import threading
 from utils.dpi_helper import DPIHelper
+from config.settings import Settings
 
 class FileListPanel(Card):
     """文件列表面板"""
@@ -26,6 +27,9 @@ class FileListPanel(Card):
         self._loading = False
         self._loading_animation_id = None
         self._update_lock = False  # 添加更新锁
+
+        # 初始化配置管理器
+        self.settings = Settings()
 
         self._build_ui()
     
@@ -293,11 +297,12 @@ class FileListPanel(Card):
             selectmode='browse'
         )
         
-        # 配置列
-        self.file_tree.column('#0', width=400, minwidth=180, stretch=True)
-        self.file_tree.column('status', width=50, minwidth=50, anchor='center', stretch=False)
-        self.file_tree.column('language', width=80, minwidth=70, anchor='center', stretch=False)
-        self.file_tree.column('size', width=70, minwidth=70, anchor='e', stretch=False)
+        # 配置列 - 启用所有列的宽度调整功能
+        column_widths = self.settings.get('column_widths', {})
+        self.file_tree.column('#0', width=column_widths.get('path', 400), minwidth=180, stretch=True)
+        self.file_tree.column('status', width=column_widths.get('status', 50), minwidth=50, anchor='center', stretch=True)
+        self.file_tree.column('language', width=column_widths.get('language', 80), minwidth=70, anchor='center', stretch=True)
+        self.file_tree.column('size', width=column_widths.get('size', 70), minwidth=70, anchor='e', stretch=True)
 
         # 设置列标题
         self.file_tree.heading('#0', text='[+] 文件路径', anchor='w')
@@ -320,6 +325,9 @@ class FileListPanel(Card):
         self.file_tree.bind('<Double-Button-1>', self._on_item_double_click)
         self.file_tree.bind('<space>', self._on_space_press)
         self.file_tree.bind('<Button-1>', self._on_item_click)
+
+        # 绑定列宽调整事件
+        self.file_tree.bind('<ButtonRelease-1>', self._on_column_resize)
         
         # 存储节点映射
         self.item_to_path = {}
@@ -658,6 +666,24 @@ class FileListPanel(Card):
     def set_update_callback(self, callback):
         """设置更新回调"""
         self.on_update_callback = callback
+
+    def _on_column_resize(self, event):
+        """列宽调整事件处理"""
+        # 检查是否是列标题区域
+        region = self.file_tree.identify_region(event.x, event.y)
+        if region == 'heading':
+            # 获取当前列宽
+            column_widths = {
+                'path': self.file_tree.column('#0', 'width'),
+                'status': self.file_tree.column('status', 'width'),
+                'language': self.file_tree.column('language', 'width'),
+                'size': self.file_tree.column('size', 'width')
+            }
+
+            # 保存到配置
+            self.settings.set('column_widths', column_widths)
+            if self.settings.get('auto_save_config', True):
+                self.settings.save()
 
     def set_file_add_callback(self, callback):
         """设置文件添加回调"""
