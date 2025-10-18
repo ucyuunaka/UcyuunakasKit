@@ -35,6 +35,11 @@ uv tool install specify-cli --force --from git+https://github.com/github/spec-ki
 uptools
 ```
 
+```powershell
+# 检查系统是否安装了所需工具
+specify check
+```
+
 ## 🎯 第三步：初始化项目
 
 在 PowerShell 7 中运行：
