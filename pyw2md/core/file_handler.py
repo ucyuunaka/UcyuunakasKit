@@ -312,6 +312,22 @@ class FileHandler:
                 file.marked = not file.marked
                 return file.marked
         return False
+    def set_mark(self, path: str, marked: bool) -> bool:
+        """设置文件标记状态"""
+        for file in self.files:
+            if file.path == path:
+                file.marked = marked
+                return True
+        return False
+    
+    def set_marks_batch(self, paths: List[str], marked: bool) -> int:
+        """批量设置文件标记状态"""
+        count = 0
+        for file in self.files:
+            if file.path in paths:
+                file.marked = marked
+                count += 1
+        return count
     
     def mark_all(self, marked: bool = True):
         """标记/取消标记所有文件"""

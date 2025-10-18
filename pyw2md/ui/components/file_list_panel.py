@@ -11,6 +11,7 @@ from core.file_handler import FileHandler, get_all_languages, format_size
 import os
 from pathlib import Path
 import threading
+from typing import List
 from utils.dpi_helper import DPIHelper
 from config.settings import Settings
 
@@ -498,8 +499,15 @@ class FileListPanel(Card):
         """单击项目"""
         item = self.file_tree.identify('item', event.x, event.y)
         if item and item in self.item_to_path:
-            file_path = self.item_to_path[item]
-            self._toggle_mark(file_path)
+            path_info = self.item_to_path[item]
+            
+            # 检查是否是文件夹节点
+            if path_info.startswith("FOLDER:"):
+                # 文件夹批量操作
+                self._toggle_folder_mark(item)
+            else:
+                # 单个文件操作
+                self._toggle_mark(path_info)
     
     def _on_item_double_click(self, event):
         """双击项目"""
@@ -520,7 +528,48 @@ class FileListPanel(Card):
         """切换文件标记状态"""
         self.file_handler.toggle_mark(file_path)
         self.refresh()
+    def _toggle_folder_mark(self, folder_item):
+        """切换文件夹下所有文件的标记状态"""
+        # 收集文件夹下所有文件
+        file_paths = self._collect_files_in_folder(folder_item)
+        
+        if not file_paths:
+            return
+        
+        # 确定新状态：基于第一个文件的当前状态
+        first_file_path = file_paths[0]
+        first_file = None
+        for file in self.file_handler.files:
+            if file.path == first_file_path:
+                first_file = file
+                break
+        
+        if first_file:
+            new_state = not first_file.marked
+            # 批量设置状态
+            count = self.file_handler.set_marks_batch(file_paths, new_state)
+            self.refresh()
+            
+            if self.on_update_callback:
+                action = "选中" if new_state else "取消选中"
+                self.on_update_callback(f"✅ 已{action}文件夹中的 {count} 个文件", 'info')
     
+    def _collect_files_in_folder(self, folder_item) -> List[str]:
+        """递归收集文件夹下的所有文件路径"""
+        file_paths = []
+        
+        def collect_recursive(item):
+            children = self.file_tree.get_children(item)
+            for child in children:
+                if child in self.item_to_path:
+                    # 这是一个文件节点
+                    file_paths.append(self.item_to_path[child])
+                else:
+                    # 这是一个文件夹节点，递归处理
+                    collect_recursive(child)
+        
+        collect_recursive(folder_item)
+        return file_paths
     def _build_tree_structure(self, files):
         """构建树状结构"""
         tree_dict = {}
@@ -544,6 +593,7 @@ class FileListPanel(Card):
         """递归插入树节点"""
         for name, value in sorted(tree_dict.items()):
             if isinstance(value, dict):
+                folder_path = prefix + name + os.sep
                 folder_item = self.file_tree.insert(
                     parent_item,
                     'end',
@@ -551,6 +601,9 @@ class FileListPanel(Card):
                     values=('', '', ''),
                     open=True
                 )
+                # 为文件夹节点添加映射，使用特殊前缀标识
+                self.item_to_path[folder_item] = f"FOLDER:{folder_path}"
+                self.path_to_item[f"FOLDER:{folder_path}"] = folder_item
                 self._insert_tree_recursive(folder_item, value, prefix + name + os.sep)
             else:
                 file_info = value
