@@ -248,12 +248,14 @@ class FileListPanel(Card):
 
         # 根据DPI缩放因子计算合适的行高
         scaling_factor = DPIHelper.get_scaling_factor()
-        base_rowheight = 18
-        scaled_rowheight = DPIHelper.scale_value(base_rowheight, scaling_factor)
-        # 确保行高至少为字体高度的1.5倍，避免文字显示不全
-        font_height = MD.get_font_ui(scaling_factor)[1]
-        min_rowheight = int(font_height * 1.5)
-        final_rowheight = max(scaled_rowheight, min_rowheight)
+
+        # 获取实际字体行高（关键修复）
+        font_config = MD.get_font_ui(scaling_factor)
+        ui_font = tk.font.Font(family=font_config[0], size=font_config[1])
+        actual_line_height = ui_font.metrics('linespace')
+
+        # 计算最终行高（实际行高 + 20%间距）
+        final_rowheight = int(actual_line_height * 1.2)
 
         # 配置 Treeview 样式
         style.configure(

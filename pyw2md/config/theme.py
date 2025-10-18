@@ -160,5 +160,18 @@ class MD:
         """缩放圆角值"""
         return DPIHelper.scale_value(radius, scaling_factor)
 
+    @staticmethod
+    def get_treeview_rowheight(scaling_factor: Optional[float] = None) -> int:
+        """计算Treeview的正确行高（基于实际字体度量）"""
+        import tkinter.font as tkfont
+        font_config = MD.get_font_ui(scaling_factor)
+
+        # 创建临时字体获取实际行高
+        temp_font = tkfont.Font(family=font_config[0], size=font_config[1])
+        line_height = temp_font.metrics('linespace')
+
+        # 返回实际高度 + 20%间距
+        return int(line_height * 1.2)
+
 # 快捷访问保持不变
 MD = MD

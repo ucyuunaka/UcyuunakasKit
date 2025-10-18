@@ -68,9 +68,9 @@ class Settings:
             "max_recent_files": 50,
             "auto_save_config": True,
             "preview_max_files": 5,
-            "auto_watch_files": True,  # 新增：自动监控文件变化
-            "watch_debounce_time": 1.0,  # 新增：监控防抖时间（秒）
-            "dpi_scaling": {  # 新增：DPI缩放配置
+            "auto_watch_files": True,  # 自动监控文件变化
+            "watch_debounce_time": 1.0,  # 监控防抖时间（秒）
+            "dpi_scaling": {  # DPI缩放配置
                 "auto_detect": True,  # 自动检测DPI
                 "scaling_factor": 1.0,  # 手动缩放因子（当auto_detect为False时使用）
                 "min_font_size": 8,  # 最小字体大小
