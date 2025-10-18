@@ -163,17 +163,3 @@ claude mcp add --transport http context7 https://mcp.context7.com/mcp
 ```bash
 claude mcp add --transport http grep https://mcp.grep.app
 ```
-
-### 编写规范文档工具
-编写需求和设计文档时使用 `specs-workflow`：
-
-1. **检查进度**: `action.type="check"`
-2. **初始化**: `action.type="init"`
-3. **更新任务**: `action.type="complete_task"`
-
-路径：`/docs/specs/*`
-
-需要先安装spec workflow MCP，安装后此部分可以从引导词中删除：
-```bash
-claude mcp add spec-workflow-mcp -s user -- npx -y spec-workflow-mcp@latest
-```
