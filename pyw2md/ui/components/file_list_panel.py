@@ -11,6 +11,7 @@ from core.file_handler import FileHandler, get_all_languages, format_size
 import os
 from pathlib import Path
 import threading
+from utils.dpi_helper import DPIHelper
 
 class FileListPanel(Card):
     """文件列表面板"""
@@ -217,11 +218,20 @@ class FileListPanel(Card):
         # 列表容器
         list_container = ctk.CTkFrame(parent, fg_color=MD.SURFACE)
         list_container.pack(fill='both', expand=True, pady=(0, MD.PAD_M))
-        
+
         # 创建样式
         style = ttk.Style()
         style.theme_use('clam')
-        
+
+        # 根据DPI缩放因子计算合适的行高
+        scaling_factor = DPIHelper.get_scaling_factor()
+        base_rowheight = 18
+        scaled_rowheight = DPIHelper.scale_value(base_rowheight, scaling_factor)
+        # 确保行高至少为字体高度的1.5倍，避免文字显示不全
+        font_height = MD.get_font_ui(scaling_factor)[1]
+        min_rowheight = int(font_height * 1.5)
+        final_rowheight = max(scaled_rowheight, min_rowheight)
+
         # 配置 Treeview 样式
         style.configure(
             "Compact.Treeview",
@@ -229,8 +239,8 @@ class FileListPanel(Card):
             foreground=MD.TEXT_PRIMARY,
             fieldbackground=MD.BG_SURFACE,
             borderwidth=0,
-            font=MD.FONT_UI,
-            rowheight=18
+            font=MD.get_font_ui(scaling_factor),
+            rowheight=final_rowheight
         )
         
         style.configure(
@@ -239,7 +249,7 @@ class FileListPanel(Card):
             foreground=MD.TEXT_PRIMARY,
             borderwidth=1,
             relief="flat",
-            font=MD.FONT_TITLE
+            font=MD.get_font_title(scaling_factor)
         )
 
         style.map(
