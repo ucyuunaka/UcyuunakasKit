@@ -55,6 +55,7 @@ from core.converter import Converter
 from core.file_watcher import FileWatcher
 from ui.components.file_list_panel import FileListPanel
 from ui.components.control_panel import ControlPanel
+from ui.components.status_bar import StatusBar
 from ui.components.dialogs import TemplatePreviewDialog, ConversionPreviewDialog
 
 
@@ -451,7 +452,7 @@ class MaterialApp(AppBase):
         用户体验设计：
         - 提供清晰的成功/失败反馈
         - 显示具体的处理数量
-        - 使用toast通知避免打断用户操作
+        - 使用StatusBar通知避免打断用户操作
 
         参数说明：
         - added_files: 成功添加的文件数量
@@ -610,7 +611,7 @@ class MaterialApp(AppBase):
         self.grid_columnconfigure(0, weight=3)
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
-        self.grid_rowconfigure(1, weight=0)  # 为toast通知预留空间
+        self.grid_rowconfigure(1, weight=0)  # 为StatusBar预留空间
         
         self.file_panel = FileListPanel(self, self.file_handler)
         self.file_panel.grid(row=0, column=0, sticky='nsew', 
@@ -627,11 +628,14 @@ class MaterialApp(AppBase):
         self.control_panel.set_preview_callback(self._on_preview)
         self.control_panel.set_convert_callback(self._on_convert)
         
+        # 创建StatusBar组件
+        self.status_bar = StatusBar(self)
+        self.status_bar.grid(row=1, column=0, columnspan=2, sticky='ew',
+                           padx=MD.PAD_M, pady=(0, MD.PAD_M))
+        
         # 注册拖放（延迟到UI构建完成后）
         if DRAG_DROP_AVAILABLE:
             self.after(100, self._setup_drag_drop)
-        
-        self.toast_label = None
     
     def _on_files_added_to_list(self, file_paths: list):
         """文件添加到列表的回调"""
@@ -659,7 +663,18 @@ class MaterialApp(AppBase):
     def _on_file_update(self, message: str, type: str = 'info'):
         """文件更新回调"""
         self.control_panel.update_stats()
+        self._update_status_bar_stats()
         self._show_toast(message, type)
+    
+    def _update_status_bar_stats(self):
+        """更新StatusBar统计信息"""
+        stats = self.file_handler.get_stats()
+        self.status_bar.update_stats(
+            stats['marked'],
+            stats['total'],
+            stats['size'],
+            stats['languages']
+        )
     
     def _on_preview(self, preview_type: str, data):
         """预览回调"""
@@ -726,34 +741,8 @@ class MaterialApp(AppBase):
             messagebox.showerror("转换失败", result['message'])
     
     def _show_toast(self, message: str, type: str = 'info'):
-        """显示通知消息"""
-        colors = {
-            'success': MD.SUCCESS,
-            'error': MD.ERROR,
-            'warning': MD.WARNING,
-            'info': MD.INFO
-        }
-
-        color = colors.get(type, MD.INFO)
-
-        if self.toast_label:
-            self.toast_label.destroy()
-
-        self.toast_label = ctk.CTkLabel(
-            self,
-            text=message,
-            font=MD.FONT_BODY,
-            fg_color=color,
-            text_color=MD.ON_PRIMARY,
-            corner_radius=MD.RADIUS_MEDIUM,
-            height=48
-        )
-
-        # 使用grid布局，但需要特殊处理，因为toast应该浮动在其他内容之上
-        self.toast_label.grid(row=1, column=0, columnspan=2, pady=(0, MD.PAD_M), sticky='ew')
-        self.toast_label.lift()  # 确保显示在最上层
-
-        self.after(3000, lambda: self.toast_label.destroy() if self.toast_label else None)
+        """显示通知消息 - 现在使用StatusBar组件"""
+        self.status_bar.show_message(message, type)
     
     def _load_saved_state(self):
         """加载保存的状态"""
@@ -766,6 +755,7 @@ class MaterialApp(AppBase):
         
         self.file_panel.refresh()
         self.control_panel.update_stats()
+        self._update_status_bar_stats()
     
     def _save_state(self):
         """保存状态"""
@@ -791,6 +781,10 @@ class MaterialApp(AppBase):
         """关闭窗口"""
         if self.watch_enabled:
             self.file_watcher.stop()
+        
+        # 清理StatusBar定时器
+        if hasattr(self, 'status_bar'):
+            self.status_bar.cleanup()
         
         if self.settings.get('auto_save_config', True):
             self._save_state()

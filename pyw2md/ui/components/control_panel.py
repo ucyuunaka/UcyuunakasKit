@@ -38,8 +38,6 @@ class ControlPanel(Card):
         # 模板选择
         self._build_template_section(scrollable_container)
         
-        # 统计卡片
-        self._build_stats_section(scrollable_container)
         
         # 操作按钮（放在可滚动区域内，确保始终可访问）
         self._build_actions(scrollable_container)
@@ -109,17 +107,6 @@ class ControlPanel(Card):
             width=200
         ).pack(fill='x')
     
-    def _build_stats_section(self, parent):
-        """构建统计区域"""
-        # 底部状态栏一行显示所有统计
-        self.stats = ctk.CTkLabel(
-            self,
-            text="0/0 文件  •  0 B  •  0 语言",
-            font=MD.FONT_UI,
-            text_color=MD.TEXT_SECONDARY,
-            anchor='w'
-        )
-        self.stats.pack(fill='x', padx=MD.PAD_M, pady=MD.PAD_S)
     
     def _build_actions(self, parent):
         """构建操作按钮 - 现在在滚动区域内"""
@@ -209,13 +196,9 @@ class ControlPanel(Card):
             self.on_convert_callback('start', marked_files)
     
     def update_stats(self):
-        """更新统计信息"""
-        stats = self.file_handler.get_stats()
-        self.stats.configure(
-            text=f"{stats['marked']}/{stats['total']} 文件  •  "
-                 f"{format_size(stats['size'])}  •  "
-                 f"{stats['languages']} 语言"
-        )
+        """更新统计信息 - 现在只更新StatusBar"""
+        # 统计信息现在由StatusBar统一显示，这里不需要重复更新
+        pass
     
     def show_progress(self):
         """显示进度条"""

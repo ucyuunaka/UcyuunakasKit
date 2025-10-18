@@ -51,8 +51,6 @@ class FileListPanel(Card):
         # 文件列表（树状视图）
         self._build_file_list(container)
         
-        # 底部统计
-        self._build_footer(container)
     
     def _build_header(self, parent):
         """构建标题栏"""
@@ -333,18 +331,6 @@ class FileListPanel(Card):
         self.item_to_path = {}
         self.path_to_item = {}
     
-    def _build_footer(self, parent):
-        """构建底部统计"""
-        footer = ctk.CTkFrame(parent, fg_color='transparent')
-        footer.pack(fill='x')
-        
-        self.stats_label = ctk.CTkLabel(
-            footer,
-            text="0 个文件",
-            font=MD.FONT_BODY,
-            text_color=MD.ON_SURFACE_VARIANT
-        )
-        self.stats_label.pack(side='left')
     
     # 事件处理
     def _add_files(self):
@@ -655,13 +641,7 @@ class FileListPanel(Card):
         """刷新显示"""
         self._filter_files()
         
-        # 更新统计
-        stats = self.file_handler.get_stats()
-        self.stats_label.configure(
-            text=f"📊 {stats['marked']}/{stats['total']} 个文件已选中  •  "
-                 f"💾 共 {format_size(stats['size'])}  •  "
-                 f"🔤 {stats['languages']} 种语言"
-        )
+        # 统计信息现在由StatusBar统一显示，这里不需要重复更新
     
     def set_update_callback(self, callback):
         """设置更新回调"""
