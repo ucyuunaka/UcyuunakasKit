@@ -108,7 +108,7 @@ openspec archive add-user-login --yes
 
 ---
 
-## 常用命令速查
+## 常用命令速查【CLI 命令（在终端运行】
 
 | 命令                           | 说明                |
 | ---------------------------- | ----------------- |
@@ -121,7 +121,7 @@ openspec archive add-user-login --yes
 
 ---
 
-## Claude Code 专属快捷命令
+## Claude Code 专属快捷命令【AI 工具斜杠命令】
 
 | 快捷命令                    | 完整说明      |
 | ----------------------- | --------- |
@@ -217,4 +217,10 @@ ls openspec/archive/  # 查看所有已完成的功能
 
 更新
 ```powershell
-uptools```
+uptools
+
+# 然后在项目内刷新配置
+cd my-project
+openspec update
+
+```
