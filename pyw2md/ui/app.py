@@ -27,6 +27,10 @@
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
 import os
+from ..core.constants import (
+    MSG_FILE_MODIFIED, MSG_FILE_DELETED, MSG_REFRESH_COMPLETE,
+    MSG_NO_CHANGES, MSG_REFRESH_FAILED, UI_UPDATE_DEBOUNCE_MS
+)
 
 # 拖放功能模块的导入采用安全降级策略
 # 如果tkinterdnd2不可用，应用会自动降级为文件选择模式
@@ -60,7 +64,7 @@ from ui.components.dialogs import TemplatePreviewDialog, ConversionPreviewDialog
 
 # UI更新防抖时间常量（毫秒）
 # 统一所有UI组件的防抖时间，提升用户体验一致性
-UI_UPDATE_DEBOUNCE = 300
+UI_UPDATE_DEBOUNCE = UI_UPDATE_DEBOUNCE_MS
 
 
 # ============ 优雅降级基类 ============
@@ -504,9 +508,9 @@ class MaterialApp(AppBase):
         """文件变化回调 - 使用FileStateManager"""
         # 使用状态栏显示文件变化消息，替代复杂的通知栏
         if event_type == 'modified':
-            self.status_bar.show_message(f"文件已修改: {os.path.basename(file_path)}", 3000)
+            self.status_bar.show_message(MSG_FILE_MODIFIED.format(filename=os.path.basename(file_path)), 3000)
         elif event_type == 'deleted':
-            self.status_bar.show_message(f"文件已删除: {os.path.basename(file_path)}", 3000)
+            self.status_bar.show_message(MSG_FILE_DELETED.format(filename=os.path.basename(file_path)), 3000)
 
     def _refresh_changed_files(self):
         """刷新变化的文件 - 使用FileStateManager"""
@@ -515,7 +519,7 @@ class MaterialApp(AppBase):
             changes = self.file_watcher.file_state_manager.get_and_clear_changes()
 
             if not changes:
-                self.status_bar.show_message("没有需要刷新的文件变化", 2000)
+                self.status_bar.show_message(MSG_NO_CHANGES, 2000)
                 return
 
             modified_count = 0
@@ -541,11 +545,11 @@ class MaterialApp(AppBase):
 
             # 显示刷新结果
             if modified_count > 0 or deleted_count > 0:
-                msg = f"已刷新: {modified_count} 个修改, {deleted_count} 个删除"
+                msg = MSG_REFRESH_COMPLETE.format(modified=modified_count, deleted=deleted_count)
                 self.status_bar.show_message(msg, 3000)
 
         except Exception as e:
-            self.status_bar.show_message(f"刷新失败: {str(e)}", 3000)
+            self.status_bar.show_message(MSG_REFRESH_FAILED.format(error=str(e)), 3000)
     
         
         

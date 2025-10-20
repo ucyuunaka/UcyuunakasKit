@@ -6,6 +6,10 @@ import threading
 import time
 from typing import Callable, Optional, Any
 from weakref import WeakMethod
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from core.constants import DEFAULT_DEBOUNCE_MS
 
 
 class SimpleDebouncer:
@@ -16,7 +20,7 @@ class SimpleDebouncer:
     避免过多的计算和UI更新。
     """
     
-    def __init__(self, callback: Callable, delay: float = 0.3):
+    def __init__(self, callback: Callable, delay: float = DEFAULT_DEBOUNCE_MS / 1000.0):
         """
         初始化防抖器
         

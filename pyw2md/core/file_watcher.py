@@ -9,6 +9,10 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, FileModifiedEvent, FileDeletedEvent
 from .file_state_manager import FileStateManager
 from utils.debouncer import SimpleDebouncer
+from .constants import (
+    DEFAULT_DEBOUNCE_MS, MAX_WATCH_ERRORS, MSG_WATCH_FAILED, MSG_WATCH_RESTARTED,
+    FILE_CHANGE_MODIFIED, FILE_CHANGE_DELETED
+)
 
 # 配置日志
 logger = logging.getLogger(__name__)
