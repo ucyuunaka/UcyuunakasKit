@@ -209,13 +209,9 @@ class MaterialApp(AppBase):
         self.converter = Converter()
 
         # 初始化文件监控器，实时跟踪文件系统变化
-        # 使用回调模式处理文件变化事件
+        # 使用回调模式处理文件变化事件，FileWatcher内部使用统一状态管理
         self.file_watcher = FileWatcher(self._on_file_changed)
         self.watch_enabled = self.settings.get('auto_watch_files', True)
-
-        # 跟踪文件变化状态，用于批量处理和用户通知
-        self.modified_files = set()  # 记录被修改的文件
-        self.deleted_files = set()   # 记录被删除的文件
 
         # 窗口调整防抖机制，避免频繁的UI重绘
         self._resize_after_id = None  # 存储防抖定时器ID
@@ -505,111 +501,55 @@ class MaterialApp(AppBase):
             return data.split()
     
     def _on_file_changed(self, event_type: str, file_path: str):
-        """文件变化回调"""
+        """文件变化回调 - 使用FileStateManager"""
+        # 使用状态栏显示文件变化消息，替代复杂的通知栏
         if event_type == 'modified':
-            self.modified_files.add(file_path)
-            self._show_file_change_notification()
+            self.status_bar.show_message(f"文件已修改: {os.path.basename(file_path)}", 3000)
         elif event_type == 'deleted':
-            self.deleted_files.add(file_path)
-            self._show_file_change_notification()
-    
-    def _show_file_change_notification(self):
-        """显示文件变化通知"""
-        modified_count = len(self.modified_files)
-        deleted_count = len(self.deleted_files)
-        
-        messages = []
-        if modified_count > 0:
-            messages.append(f"{modified_count} 个文件已修改")
-        if deleted_count > 0:
-            messages.append(f"{deleted_count} 个文件已删除")
-        
-        if messages:
-            msg = "检测到文件变化: " + ", ".join(messages)
-            
-            if not hasattr(self, 'notification_bar') or not self.notification_bar.winfo_exists():
-                self._create_notification_bar(msg)
-            else:
-                self.notification_label.configure(text=msg)
-    
-    def _create_notification_bar(self, message: str):
-        """创建通知栏"""
-        self.notification_bar = ctk.CTkFrame(
-            self,
-            fg_color=MD.WARNING_CONTAINER,
-            height=50
-        )
-        self.notification_bar.grid(row=0, column=0, columnspan=2, sticky='ew',
-                                   padx=MD.PAD_M, pady=(MD.PAD_M, 0))
+            self.status_bar.show_message(f"文件已删除: {os.path.basename(file_path)}", 3000)
 
-        content = ctk.CTkFrame(self.notification_bar, fg_color='transparent')
-        content.grid(row=0, column=0, sticky='nsew', padx=MD.PAD_M, pady=MD.PAD_S)
-        self.notification_bar.grid_columnconfigure(0, weight=1)
-        self.notification_bar.grid_rowconfigure(0, weight=1)
-
-        self.notification_label = ctk.CTkLabel(
-            content,
-            text=message,
-            font=MD.FONT_BODY,
-            text_color=MD.ON_SURFACE
-        )
-        self.notification_label.grid(row=0, column=0, sticky='w', padx=(0, MD.PAD_M))
-
-        button_frame = ctk.CTkFrame(content, fg_color='transparent')
-        button_frame.grid(row=0, column=1, sticky='e')
-
-        ctk.CTkButton(
-            button_frame,
-            text="刷新",
-            command=self._refresh_changed_files,
-            fg_color=MD.PRIMARY,
-            hover_color=MD.PRIMARY_CONTAINER,
-            width=80,
-            height=32
-        ).grid(row=0, column=0, padx=(0, MD.PAD_S))
-
-        ctk.CTkButton(
-            button_frame,
-            text="关闭",
-            command=self._close_notification,
-            fg_color='transparent',
-            hover_color=MD.BG_SURFACE,
-            width=32,
-            height=32
-        ).grid(row=0, column=1)
-    
     def _refresh_changed_files(self):
-        """刷新变化的文件"""
-        for file_path in self.deleted_files:
-            self.file_handler.remove_file(file_path)
-            self.file_watcher.remove_file(file_path)
-        
-        for file_path in self.modified_files:
-            for file_info in self.file_handler.files:
-                if file_info.path == file_path:
-                    file_info.update_cache()
-                    break
-        
-        self.file_panel.refresh()
+        """刷新变化的文件 - 使用FileStateManager"""
+        try:
+            # 从FileWatcher获取状态管理器中的变化
+            changes = self.file_watcher.file_state_manager.get_and_clear_changes()
 
-        modified_count = len(self.modified_files)
-        deleted_count = len(self.deleted_files)
-        self.modified_files.clear()
-        self.deleted_files.clear()
-        
-        self._close_notification()
-        
-        msg = f"已刷新: {modified_count} 个修改, {deleted_count} 个删除"
-        self._show_toast(msg, 'success')
+            if not changes:
+                self.status_bar.show_message("没有需要刷新的文件变化", 2000)
+                return
+
+            modified_count = 0
+            deleted_count = 0
+
+            # 处理每个文件变化
+            for change in changes:
+                if change.change_type == 'deleted':
+                    # 从文件处理器中移除已删除的文件
+                    self.file_handler.remove_file(change.path)
+                    self.file_watcher.remove_file(change.path)
+                    deleted_count += 1
+                elif change.change_type == 'modified':
+                    # 更新已修改文件的缓存
+                    for file_info in self.file_handler.files:
+                        if file_info.path == change.path:
+                            file_info.update_cache()
+                            modified_count += 1
+                            break
+
+            # 刷新文件列表面板
+            self.file_panel.refresh()
+
+            # 显示刷新结果
+            if modified_count > 0 or deleted_count > 0:
+                msg = f"已刷新: {modified_count} 个修改, {deleted_count} 个删除"
+                self.status_bar.show_message(msg, 3000)
+
+        except Exception as e:
+            self.status_bar.show_message(f"刷新失败: {str(e)}", 3000)
     
-    def _close_notification(self):
-        """关闭通知栏"""
-        if hasattr(self, 'notification_bar') and self.notification_bar.winfo_exists():
-            self.notification_bar.destroy()
         
-        self.modified_files.clear()
-        self.deleted_files.clear()
-    
+        
+        
     def _build_ui(self):
         """构建UI"""
         self.grid_columnconfigure(0, weight=3)
@@ -657,7 +597,7 @@ class MaterialApp(AppBase):
         if self._resize_after_id:
             self.after_cancel(self._resize_after_id)
         
-        self._resize_after_id = self.after(100, self._handle_resize)
+        self._resize_after_id = self.after(UI_UPDATE_DEBOUNCE, self._handle_resize)
     
     def _handle_resize(self):
         """处理窗口调整"""

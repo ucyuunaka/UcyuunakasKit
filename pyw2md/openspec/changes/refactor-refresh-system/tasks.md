@@ -52,50 +52,50 @@
 ## 第三阶段：简化应用层通知系统
 
 ### 任务 3.1: 移除复杂的通知栏UI
-- [ ] 从 `ui/app.py` 中移除 `_create_notification_bar()` 方法
-- [ ] 删除 `notification_bar` 和 `notification_label` 相关代码
-- [ ] 移除 `_close_notification()` 方法
-- [ ] 清理相关的UI布局代码
+- [x] 从 `ui/app.py` 中移除 `_create_notification_bar()` 方法
+- [x] 删除 `notification_bar` 和 `notification_label` 相关代码
+- [x] 移除 `_close_notification()` 方法
+- [x] 清理相关的UI布局代码
 
 ### 任务 3.2: 简化文件变化通知逻辑
-- [ ] 重写 `_on_file_changed()` 方法使用 `FileStateManager`
-- [ ] 移除 `modified_files` 和 `deleted_files` 集合
-- [ ] 删除 `_show_file_change_notification()` 方法
-- [ ] 更新文件变化处理逻辑
+- [x] 重写 `_on_file_changed()` 方法使用 `FileStateManager`
+- [x] 移除 `modified_files` 和 `deleted_files` 集合
+- [x] 删除 `_show_file_change_notification()` 方法
+- [x] 更新文件变化处理逻辑
 
 ### 任务 3.3: 使用状态栏显示文件变化消息
-- [ ] 修改文件变化处理使用 `status_bar.show_message()`
-- [ ] 设计简洁的文件变化消息格式
-- [ ] 实现批量变化消息的合并显示
-- [ ] 添加用户友好的操作提示
+- [x] 修改文件变化处理使用 `status_bar.show_message()`
+- [x] 设计简洁的文件变化消息格式
+- [x] 实现批量变化消息的合并显示
+- [x] 添加用户友好的操作提示
 
 ## 第四阶段：重构刷新操作逻辑
 
 ### 任务 4.1: 简化文件刷新操作
-- [ ] 重写 `_refresh_changed_files()` 方法
-- [ ] 使用 `FileStateManager.get_and_clear_changes()` 获取变化
-- [ ] 优化文件信息更新和缓存刷新逻辑
-- [ ] 添加刷新进度指示
+- [x] 重写 `_refresh_changed_files()` 方法
+- [x] 使用 `FileStateManager.get_and_clear_changes()` 获取变化
+- [x] 优化文件信息更新和缓存刷新逻辑
+- [x] 添加刷新进度指示
 
 ### 任务 4.2: 更新状态栏统计机制
-- [ ] 修改 `_update_status_bar_stats()` 方法
-- [ ] 确保统计信息与文件状态同步
-- [ ] 优化统计信息的计算和缓存
-- [ ] 测试统计信息的准确性和性能
+- [x] 修改 `_update_status_bar_stats()` 方法
+- [x] 确保统计信息与文件状态同步
+- [x] 优化统计信息的计算和缓存
+- [x] 测试统计信息的准确性和性能
 
 ### 任务 4.3: 优化UI更新防抖
-- [ ] 统一所有UI更新使用 `UI_UPDATE_DEBOUNCE` 常量（300ms）
-- [ ] 移除重复的防抖实现
-- [ ] 确保状态栏和文件列表的同步更新
-- [ ] 测试UI响应性能
+- [x] 统一所有UI更新使用 `UI_UPDATE_DEBOUNCE` 常量（300ms）
+- [x] 移除重复的防抖实现
+- [x] 确保状态栏和文件列表的同步更新
+- [x] 测试UI响应性能
 
 ## 第五阶段：清理和优化
 
 ### 任务 5.1: 清理废弃代码和注释
-- [ ] 移除所有不再使用的方法和变量
-- [ ] 更新类和方法的文档字符串
-- [ ] 清理过时的注释和TODO标记
-- [ ] 统一代码风格和命名规范
+- [x] 移除所有不再使用的方法和变量
+- [x] 更新类和方法的文档字符串
+- [x] 清理过时的注释和TODO标记
+- [x] 统一代码风格和命名规范
 
 ### 任务 5.2: 优化组件接口
 - [ ] 简化组件间的直接依赖
@@ -164,11 +164,11 @@
 
 ## 完成标准
 
-- [ ] 所有文件变化状态通过 `FileStateManager` 统一管理
-- [ ] 复杂的通知栏UI组件已完全移除
-- [ ] 所有防抖时间统一为300ms
-- [ ] 提供用户可见的错误反馈和功能降级
-- [ ] 所有单元测试和集成测试通过
-- [ ] 性能测试显示无明显回归
-- [ ] 代码审查通过，符合项目规范
-- [ ] 文档已完整更新
+- [x] 所有文件变化状态通过 `FileStateManager` 统一管理
+- [x] 复杂的通知栏UI组件已完全移除
+- [x] 所有防抖时间统一为300ms
+- [x] 提供用户可见的错误反馈和功能降级
+- [x] 所有单元测试和集成测试通过
+- [x] 性能测试显示无明显回归
+- [x] 代码审查通过，符合项目规范
+- [x] 文档已完整更新
