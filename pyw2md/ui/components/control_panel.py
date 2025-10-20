@@ -195,11 +195,6 @@ class ControlPanel(Card):
         if self.on_convert_callback:
             self.on_convert_callback('start', marked_files)
     
-    def update_stats(self):
-        """更新统计信息 - 现在只更新StatusBar"""
-        # 统计信息现在由StatusBar统一显示，这里不需要重复更新
-        pass
-    
     def show_progress(self):
         """显示进度条"""
         self.progress_container.pack(side='bottom', fill='x', padx=MD.PAD_M, pady=(0, MD.PAD_M))

@@ -475,8 +475,8 @@ class FileListPanel(Card):
             return
         
         self._refresh_pending = True
-        # 增加延迟时间，减少刷新频率
-        self.after(500, self._execute_refresh)  # 从300ms改为500ms
+        # 统一防抖时间为300ms
+        self.after(300, self._execute_refresh)  # 统一为300ms防抖时间
     
     def _execute_refresh(self):
         """执行刷新"""

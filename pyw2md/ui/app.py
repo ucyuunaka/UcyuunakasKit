@@ -58,6 +58,10 @@ from ui.components.control_panel import ControlPanel
 from ui.components.status_bar import StatusBar
 from ui.components.dialogs import TemplatePreviewDialog, ConversionPreviewDialog
 
+# UI更新防抖时间常量（毫秒）
+# 统一所有UI组件的防抖时间，提升用户体验一致性
+UI_UPDATE_DEBOUNCE = 300
+
 
 # ============ 优雅降级基类 ============
 class DragDropMixin:
@@ -215,6 +219,9 @@ class MaterialApp(AppBase):
 
         # 窗口调整防抖机制，避免频繁的UI重绘
         self._resize_after_id = None  # 存储防抖定时器ID
+
+        # 状态栏更新防抖机制
+        self._status_update_after_id = None  # 存储状态栏更新防抖定时器ID
 
         # 按顺序初始化UI组件和系统功能
         self._setup_window()      # 配置窗口属性
@@ -460,8 +467,6 @@ class MaterialApp(AppBase):
         """
         # 刷新文件列表显示
         self.file_panel.refresh()
-        # 更新控制面板统计信息
-        self.control_panel.update_stats()
 
         # 构建用户反馈消息
         messages = []
@@ -586,8 +591,7 @@ class MaterialApp(AppBase):
                     break
         
         self.file_panel.refresh()
-        self.control_panel.update_stats()
-        
+
         modified_count = len(self.modified_files)
         deleted_count = len(self.deleted_files)
         self.modified_files.clear()
@@ -662,7 +666,16 @@ class MaterialApp(AppBase):
     
     def _on_file_update(self, message: str, type: str = 'info'):
         """文件更新回调"""
-        self.control_panel.update_stats()
+        # 使用防抖机制更新状态栏，避免频繁更新
+        if self._status_update_after_id:
+            self.after_cancel(self._status_update_after_id)
+
+        self._status_update_after_id = self.after(UI_UPDATE_DEBOUNCE,
+                                                   lambda: self._debounced_status_update(message, type))
+
+    def _debounced_status_update(self, message: str, type: str = 'info'):
+        """防抖后的状态更新"""
+        self._status_update_after_id = None
         self._update_status_bar_stats()
         self._show_toast(message, type)
     
@@ -752,9 +765,8 @@ class MaterialApp(AppBase):
                 self.file_handler.add_file(file_path)
                 if self.watch_enabled:
                     self.file_watcher.add_file(file_path)
-        
+
         self.file_panel.refresh()
-        self.control_panel.update_stats()
         self._update_status_bar_stats()
     
     def _save_state(self):
