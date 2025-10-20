@@ -40,7 +40,7 @@ class Btn(ctk.CTkButton):
             })
 
         kwargs.setdefault('corner_radius', MD.RADIUS)
-        kwargs.setdefault('font', MD.FONT_UI)
+        kwargs.setdefault('font', MD.get_font_ui())
         kwargs.setdefault('height', 28)
 
         super().__init__(master, **kwargs)

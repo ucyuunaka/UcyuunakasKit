@@ -82,7 +82,7 @@ class StatusBar(ctk.CTkFrame):
         self._label = ctk.CTkLabel(
             self,
             text="",
-            font=MD.FONT_BODY,
+            font=MD.get_font_body(),
             anchor='w',  # 左对齐
             padx=MD.PAD_M
         )

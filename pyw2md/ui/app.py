@@ -358,8 +358,8 @@ class MaterialApp(AppBase):
         """
         hint = ctk.CTkLabel(
             self,
-            text="💡 提示: 安装 tkinterdnd2 启用拖放功能",
-            font=MD.FONT_LABEL,
+            text="提示: 安装 tkinterdnd2 启用拖放功能",
+            font=MD.get_font_label(),
             text_color=MD.WARNING
         )
         hint.grid(row=0, column=0, columnspan=2, pady=MD.PAD_S, sticky='ew')

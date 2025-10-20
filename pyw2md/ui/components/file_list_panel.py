@@ -65,15 +65,11 @@ class FileListPanel(Card):
         ctk.CTkLabel(
             title_container,
             text="文件管理",
-            font=MD.FONT_HEADLINE,
+            font=MD.get_font_headline(),
             text_color=MD.ON_SURFACE
         ).pack(side='left')
         
-        ctk.CTkLabel(
-            title_container,
-            text="📂",
-            font=("Segoe UI Emoji", 16)
-        ).pack(side='left', padx=(MD.PAD_S, 0))
+        # 移除了emoji图标，使用纯文本标题
         
         # 加载指示器容器
         self.loading_container = ctk.CTkFrame(header, fg_color=MD.BG_SURFACE, corner_radius=MD.RADIUS)
@@ -93,7 +89,7 @@ class FileListPanel(Card):
         self.loading_label = ctk.CTkLabel(
             self.loading_container,
             text="加载中...",
-            font=MD.FONT_BODY,
+            font=MD.get_font_body(),
             text_color=MD.PRIMARY
         )
         self.loading_label.pack(padx=MD.PAD_M, pady=(0, MD.PAD_S))
@@ -110,7 +106,7 @@ class FileListPanel(Card):
         search_entry = ctk.CTkEntry(
             search_bar,
             textvariable=self.search_var,
-            placeholder_text="🔍 搜索文件名...",
+            placeholder_text="搜索文件名...",
             width=300,
             fg_color=MD.BG_SURFACE,
             border_color=MD.BORDER,
@@ -132,7 +128,7 @@ class FileListPanel(Card):
             fg_color=MD.BG_SURFACE,
             button_color=MD.PRIMARY,
             border_color=MD.OUTLINE,
-            font=MD.FONT_BODY
+            font=MD.get_font_body()
         )
         language_combo.pack(side='left')
     
@@ -151,7 +147,7 @@ class FileListPanel(Card):
         Btn(
             left_buttons,
             kind='primary',
-            text="➕ 文件",
+            text="添加文件",
             command=self._add_files,
             width=100
         ).pack(side='left', padx=(0, MD.PAD_S))
@@ -438,7 +434,7 @@ class FileListPanel(Card):
             self.refresh()
             
             if self.on_update_callback:
-                self.on_update_callback("🗑️ 已清空文件列表", 'info')
+                self.on_update_callback("已清空文件列表", 'info')
     
     def _mark_all(self, marked: bool):
         """全选/全不选"""

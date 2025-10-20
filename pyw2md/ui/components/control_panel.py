@@ -56,15 +56,11 @@ class ControlPanel(Card):
         ctk.CTkLabel(
             title_container,
             text="转换设置",
-            font=MD.FONT_HEADLINE,
+            font=MD.get_font_headline(),
             text_color=MD.ON_SURFACE
         ).pack(side='left')
         
-        ctk.CTkLabel(
-            title_container,
-            text="⚙️",
-            font=("Segoe UI Emoji", 24)
-        ).pack(side='left', padx=(MD.PAD_S, 0))
+        # 移除了emoji图标，使用纯文本标题
     
     def _build_template_section(self, parent):
         """构建模板选择区域"""
@@ -78,7 +74,7 @@ class ControlPanel(Card):
         ctk.CTkLabel(
             section_container,
             text="Markdown 模板",
-            font=MD.FONT_TITLE,
+            font=MD.get_font_title(),
             text_color=MD.TEXT_PRIMARY,
             anchor='w'
         ).pack(fill='x', pady=(0, MD.PAD_S))
@@ -93,7 +89,7 @@ class ControlPanel(Card):
             fg_color=MD.BG_SURFACE,
             button_color=MD.ACCENT_BLUE,
             border_color=MD.BORDER,
-            font=MD.FONT_UI,
+            font=MD.get_font_ui(),
             command=self._on_template_changed
         )
         template_combo.pack(fill='x', pady=(0, MD.PAD_S))
@@ -127,7 +123,7 @@ class ControlPanel(Card):
             command=self._start_conversion,
             kind='primary',
             height=56,
-            font=MD.FONT_UI
+            font=MD.get_font_ui()
         ).pack(fill='x')
         
         # 添加一些底部空间，确保按钮不会紧贴底部
@@ -153,7 +149,7 @@ class ControlPanel(Card):
         self.progress_label = ctk.CTkLabel(
             progress_content,
             text="",
-            font=MD.FONT_UI,
+            font=MD.get_font_ui(),
             text_color=MD.TEXT_SECONDARY
         )
         self.progress_label.pack()

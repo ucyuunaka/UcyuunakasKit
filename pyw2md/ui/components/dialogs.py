@@ -40,7 +40,7 @@ class PreviewDialog(ctk.CTkToplevel):
         ctk.CTkLabel(
             header_content,
             text=title,
-            font=MD.FONT_HEADLINE,
+            font=MD.get_font_headline(),
             text_color=MD.ON_SURFACE
         ).pack(anchor='w')
         
@@ -48,7 +48,7 @@ class PreviewDialog(ctk.CTkToplevel):
             ctk.CTkLabel(
                 header_content,
                 text=subtitle,
-                font=MD.FONT_BODY,
+                font=MD.get_font_body(),
                 text_color=MD.ON_SURFACE_VARIANT
             ).pack(anchor='w', pady=(MD.SPACING_XS, 0))
         
@@ -61,7 +61,7 @@ class PreviewDialog(ctk.CTkToplevel):
         
         textbox = ctk.CTkTextbox(
             content,
-            font=MD.FONT_MONO,
+            font=MD.get_font_mono(),
             fg_color=MD.SURFACE,
             text_color=MD.ON_SURFACE,
             wrap='none'
@@ -112,7 +112,7 @@ class ConversionPreviewDialog(PreviewDialog):
         super().__init__(parent, "转换预览", 900, 700)
         
         self._build_header(
-            f"👁️ 转换预览",
+            "转换预览",
             f"使用 {template} 模板  •  预览前 {min(len(files), max_files)} 个文件"
         )
         

@@ -52,10 +52,6 @@ class MD:
     SURFACE = "#2A2A3A"         # 表面（通用）
     SURFACE_1 = "#2A2A3A"       # 表面1
     SURFACE_2 = "#363650"       # 表面2
-    FONT_HEADLINE = ("Segoe UI Semibold", 12)  # 标题字体
-    FONT_BODY = ("Segoe UI", 10)    # 正文字体
-    FONT_LABEL = ("Segoe UI", 9)    # 标签字体
-    FONT_MONO = ("Cascadia Code", 9)  # 等宽字体
 
     # 警告颜色
     WARNING = "#FAB387"         # 警告色
@@ -85,7 +81,9 @@ class MD:
             min_size=8,
             max_size=24
         )
-        return ("Cascadia Code", size)
+        # 中文字体优先的等宽字体栈
+        font_stack = "Cascadia Code Mono, Consolas, 'Microsoft YaHei Mono', 'Courier New', monospace"
+        return (font_stack, size)
 
     @staticmethod
     def get_font_ui(scaling_factor: Optional[float] = None) -> Tuple[str, int]:
@@ -96,7 +94,9 @@ class MD:
             min_size=8,
             max_size=24
         )
-        return ("Segoe UI", size)
+        # 中文字体优先的UI字体栈
+        font_stack = "Microsoft YaHei UI, Segoe UI, system-ui, -apple-system, PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif"
+        return (font_stack, size)
 
     @staticmethod
     def get_font_title(scaling_factor: Optional[float] = None) -> Tuple[str, int]:
@@ -107,7 +107,9 @@ class MD:
             min_size=8,
             max_size=24
         )
-        return ("Segoe UI Semibold", size)
+        # 中文字体优先的标题字体栈
+        font_stack = "Microsoft YaHei UI, Segoe UI Semibold, system-ui, -apple-system, PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif"
+        return (font_stack, size)
 
     @staticmethod
     def get_font_headline(scaling_factor: Optional[float] = None) -> Tuple[str, int]:
@@ -118,7 +120,9 @@ class MD:
             min_size=10,
             max_size=32
         )
-        return ("Segoe UI Semibold", size)
+        # 中文字体优先的大标题字体栈
+        font_stack = "Microsoft YaHei UI, Segoe UI Semibold, system-ui, -apple-system, PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif"
+        return (font_stack, size)
 
     @staticmethod
     def get_font_body(scaling_factor: Optional[float] = None) -> Tuple[str, int]:
@@ -129,7 +133,9 @@ class MD:
             min_size=8,
             max_size=24
         )
-        return ("Segoe UI", size)
+        # 中文字体优先的正文字体栈
+        font_stack = "Microsoft YaHei UI, Segoe UI, system-ui, -apple-system, PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif"
+        return (font_stack, size)
 
     @staticmethod
     def get_font_label(scaling_factor: Optional[float] = None) -> Tuple[str, int]:
@@ -140,15 +146,18 @@ class MD:
             min_size=8,
             max_size=24
         )
-        return ("Segoe UI", size)
+        # 中文字体优先的标签字体栈
+        font_stack = "Microsoft YaHei UI, Segoe UI, system-ui, -apple-system, PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif"
+        return (font_stack, size)
 
     # 向后兼容的静态字体定义（已废弃，建议使用动态方法）
-    FONT_MONO = ("Cascadia Code", 9)  # 已废弃，使用 get_font_mono()
-    FONT_UI = ("Segoe UI", 9)  # 已废弃，使用 get_font_ui()
-    FONT_TITLE = ("Segoe UI Semibold", 10)  # 已废弃，使用 get_font_title()
-    FONT_HEADLINE = ("Segoe UI Semibold", 12)  # 已废弃，使用 get_font_headline()
-    FONT_BODY = ("Segoe UI", 10)  # 已废弃，使用 get_font_body()
-    FONT_LABEL = ("Segoe UI", 9)  # 已废弃，使用 get_font_label()
+    # 这些常量不支持DPI缩放和中文字体，将在未来版本中移除
+    FONT_MONO = ("Cascadia Code", 9)  # ⚠️ 已废弃，使用 get_font_mono()
+    FONT_UI = ("Segoe UI", 9)  # ⚠️ 已废弃，使用 get_font_ui()
+    FONT_TITLE = ("Segoe UI Semibold", 10)  # ⚠️ 已废弃，使用 get_font_title()
+    FONT_HEADLINE = ("Segoe UI Semibold", 12)  # ⚠️ 已废弃，使用 get_font_headline()
+    FONT_BODY = ("Segoe UI", 10)  # ⚠️ 已废弃，使用 get_font_body()
+    FONT_LABEL = ("Segoe UI", 9)  # ⚠️ 已废弃，使用 get_font_label()
 
     @staticmethod
     def scale_padding(padding: int, scaling_factor: Optional[float] = None) -> int:
