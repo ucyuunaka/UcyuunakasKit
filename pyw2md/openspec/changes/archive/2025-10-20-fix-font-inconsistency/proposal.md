@@ -24,6 +24,16 @@ This change will focus on:
 - New font rendering systems
 - Advanced typography features
 
+## Why
+Font inconsistency is a critical UX issue that affects application usability and professional appearance. The current mixed approach to font handling creates visual inconsistencies, especially for international users. Chinese users experience poor font rendering, and emoji overuse creates accessibility issues. This change addresses these problems by standardizing font handling across all UI components.
+
+## What Changes
+This change will:
+1. **Remove all emoji icons and text** from UI components, replacing them with simple text labels or icons
+2. **Update theme configuration** to include proper Chinese font stacks and fallback mechanisms
+3. **Standardize font usage** across all UI components to use dynamic DPI-aware methods
+4. **Update component specs** to reflect the new font standardization requirements
+
 ## Dependencies
 - Existing `font-scaling` spec requirements
 - Current DPI detection infrastructure

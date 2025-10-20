@@ -1,4 +1,4 @@
-# Theme Configuration Font Enhancement
+# configuration Specification
 
 ## ADDED Requirements
 ### Requirement: Chinese Font Support
@@ -23,7 +23,7 @@ The theme configuration SHALL provide proper Chinese font support in font stacks
 
 ## MODIFIED Requirements
 ### Requirement: Enhanced Font Stacks
-Font stacks SHALL be optimized for better internationalization support.
+Font stacks MUST be optimized for better internationalization support.
 
 #### Scenario: UI Font Stack Update
 **Given** the current UI font stack prioritizes Latin fonts
@@ -41,7 +41,7 @@ Font stacks SHALL be optimized for better internationalization support.
 **Then** they SHALL be increased for better readability across all DPI scales
 
 ### Requirement: Font Method Deprecation
-Static font constants SHALL be deprecated and marked as unused.
+Static font constants MUST be deprecated and marked as unused.
 
 #### Scenario: Font Constant Deprecation
 **Given** static font constants exist in the theme configuration
