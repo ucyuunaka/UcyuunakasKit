@@ -27,7 +27,7 @@
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
 import os
-from ..core.constants import (
+from core.constants import (
     MSG_FILE_MODIFIED, MSG_FILE_DELETED, MSG_REFRESH_COMPLETE,
     MSG_NO_CHANGES, MSG_REFRESH_FAILED, UI_UPDATE_DEBOUNCE_MS
 )
