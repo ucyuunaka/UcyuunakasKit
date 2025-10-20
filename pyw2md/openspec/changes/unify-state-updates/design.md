@@ -208,6 +208,32 @@ def _flush_update_queue(self):
         self._apply_update(update_type, data)
 
     self._update_queue.clear()
+
+### 3. 竞态条件防护
+
+def _merge_updates(self, updates):
+    """合并更新时防止竞态条件"""
+    # 使用深拷贝避免在迭代时修改
+    import copy
+    updates_copy = copy.deepcopy(updates)
+
+    # 按优先级合并
+    merged = {}
+    for update_type, data_list in updates_copy.items():
+        if update_type == 'file_stats':
+            # 文件统计取最后一个值（最新状态）
+            merged[update_type] = data_list[-1]
+        elif update_type == 'filter_stats':
+            # 过滤统计需要累加
+            merged[update_type] = self._accumulate_filter_stats(data_list)
+
+    return merged
+
+def _accumulate_filter_stats(self, data_list):
+    """累加过滤统计信息"""
+    total_files = max(data['total_files'] for data in data_list)
+    filtered_files = max(data['filtered_files'] for data in data_list)
+    return {'total_files': total_files, 'filtered_files': filtered_files}
 ```
 
 ### 3. 异步更新
@@ -237,6 +263,27 @@ def _validate_state_consistency(self):
         logger.warning(f"状态不一致: 列表显示{list_count}, 统计显示{stats_count}")
         # 触发状态同步
         self._sync_state()
+
+def _sync_state(self):
+    """同步状态"""
+    # 获取真实状态
+    actual_stats = self.file_handler.get_statistics()
+
+    # 强制刷新缓存
+    self.status_bar.clear_cache()
+
+    # 重新应用统计
+    self.status_bar.update_file_stats(**actual_stats['file'])
+    self.status_bar.update_filter_stats(**actual_stats['filter'])
+
+    logger.info("状态同步完成")
+
+def _schedule_consistency_check(self):
+    """定期调度一致性检查"""
+    # 延迟检查，避免在更新过程中检查
+    if hasattr(self, '_check_after_id'):
+        self.after_cancel(self._check_after_id)
+    self._check_after_id = self.after(1000, self._validate_state_consistency)
 ```
 
 ### 2. 错误恢复机制
