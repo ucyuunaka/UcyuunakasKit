@@ -1,0 +1,103 @@
+{
+  "id": "14ae4aac-5797-4db4-a417-5fc970003ac7",
+  "title": "hi",
+  "messages": [
+    {
+      "role": "user",
+      "content": {
+        "root": {
+          "children": [
+            {
+              "children": [
+                {
+                  "detail": 0,
+                  "format": 0,
+                  "mode": "normal",
+                  "style": "",
+                  "text": "hihi",
+                  "type": "text",
+                  "version": 1
+                }
+              ],
+              "direction": "ltr",
+              "format": "",
+              "indent": 0,
+              "type": "paragraph",
+              "version": 1,
+              "textFormat": 0,
+              "textStyle": ""
+            }
+          ],
+          "direction": "ltr",
+          "format": "",
+          "indent": 0,
+          "type": "root",
+          "version": 1
+        }
+      },
+      "promptContent": [
+        {
+          "type": "text",
+          "text": "\n\nhihi\n\n"
+        }
+      ],
+      "id": "c1170a9e-d15a-4525-8511-cae9d6ef7cdf",
+      "mentionables": [
+        {
+          "type": "current-file",
+          "file": null
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": {
+        "root": {
+          "children": [
+            {
+              "children": [
+                {
+                  "detail": 0,
+                  "format": 0,
+                  "mode": "normal",
+                  "style": "",
+                  "text": "nihao",
+                  "type": "text",
+                  "version": 1
+                }
+              ],
+              "direction": "ltr",
+              "format": "",
+              "indent": 0,
+              "type": "paragraph",
+              "version": 1,
+              "textFormat": 0,
+              "textStyle": ""
+            }
+          ],
+          "direction": "ltr",
+          "format": "",
+          "indent": 0,
+          "type": "root",
+          "version": 1
+        }
+      },
+      "promptContent": [
+        {
+          "type": "text",
+          "text": "\n\nnihao\n\n"
+        }
+      ],
+      "id": "2dc7c114-5d82-4469-9033-44515b6e3da0",
+      "mentionables": [
+        {
+          "type": "current-file",
+          "file": null
+        }
+      ]
+    }
+  ],
+  "createdAt": 1761007219827,
+  "updatedAt": 1761007234648,
+  "schemaVersion": 1
+}
