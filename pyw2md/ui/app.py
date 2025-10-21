@@ -44,7 +44,6 @@ UI_UPDATE_DEBOUNCE = UI_UPDATE_DEBOUNCE_MS
 
 # ============ 优雅降级基类 ============
 class DragDropMixin:
-    """拖放功能混合类 - 提供安全的降级处理"""
 
     def drop_target_register(self, *args, **kwargs):
         if DRAG_DROP_AVAILABLE and hasattr(super(), 'drop_target_register'):
@@ -547,13 +546,11 @@ class MaterialApp(AppBase):
                                                    lambda: self._debounced_status_update(message, type))
 
     def _debounced_status_update(self, message: str, type: str = 'info'):
-        """防抖后的状态更新"""
         self._status_update_after_id = None
         self._update_status_bar_stats()
         self._show_toast(message, type)
     
     def _update_status_bar_stats(self):
-        """更新StatusBar统计信息"""
         stats = self.file_handler.get_stats()
         self.status_bar.update_stats(
             stats['marked'],
@@ -563,7 +560,6 @@ class MaterialApp(AppBase):
         )
     
     def _on_preview(self, preview_type: str, data):
-        """预览回调"""
         if preview_type == 'template':
             TemplatePreviewDialog(self, data)
         
@@ -576,7 +572,6 @@ class MaterialApp(AppBase):
             self._show_toast(f"警告: {data}", 'warning')
     
     def _on_convert(self, action: str, data):
-        """转换回调"""
         if action == 'warning':
             self._show_toast(f"警告: {data}", 'warning')
             return
@@ -585,7 +580,6 @@ class MaterialApp(AppBase):
             self._perform_conversion(data)
     
     def _perform_conversion(self, files):
-        """执行转换 - 异步优化"""
         output_file = filedialog.asksaveasfilename(
             title="保存 Markdown 文件",
             defaultextension=".md",
@@ -613,7 +607,6 @@ class MaterialApp(AppBase):
         threading.Thread(target=convert_thread, daemon=True).start()
     
     def _on_conversion_complete(self, result, output_file):
-        """转换完成回调"""
         self.after(1000, self.control_panel.hide_progress)
         
         if result['success']:
@@ -627,11 +620,9 @@ class MaterialApp(AppBase):
             messagebox.showerror("转换失败", result['message'])
     
     def _show_toast(self, message: str, type: str = 'info'):
-        """显示通知消息 - 现在使用StatusBar组件"""
         self.status_bar.show_message(message, type)
     
     def _load_saved_state(self):
-        """加载保存的状态"""
         recent_files = self.settings.get('recent_files', [])
         for file_path in recent_files:
             if os.path.exists(file_path):
@@ -643,7 +634,6 @@ class MaterialApp(AppBase):
         self._update_status_bar_stats()
     
     def _save_state(self):
-        """保存状态"""
         geometry = self.geometry().split('+')[0]
         width, height = map(int, geometry.split('x'))
         
@@ -663,7 +653,6 @@ class MaterialApp(AppBase):
         self.settings.save()
     
     def _on_closing(self):
-        """关闭窗口"""
         if self.watch_enabled:
             self.file_watcher.stop()
         

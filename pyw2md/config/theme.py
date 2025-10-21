@@ -74,7 +74,6 @@ class MD:
 
     @staticmethod
     def get_font_mono(scaling_factor: Optional[float] = None) -> Tuple[str, int]:
-        """获取等宽字体（支持DPI缩放）"""
         size = DPIHelper.scale_font_size(
             MD._BASE_FONT_MONO_SIZE,
             scaling_factor,
@@ -87,7 +86,6 @@ class MD:
 
     @staticmethod
     def get_font_ui(scaling_factor: Optional[float] = None) -> Tuple[str, int]:
-        """获取UI字体（支持DPI缩放）"""
         size = DPIHelper.scale_font_size(
             MD._BASE_FONT_UI_SIZE,
             scaling_factor,
@@ -100,7 +98,6 @@ class MD:
 
     @staticmethod
     def get_font_title(scaling_factor: Optional[float] = None) -> Tuple[str, int]:
-        """获取标题字体（支持DPI缩放）"""
         size = DPIHelper.scale_font_size(
             MD._BASE_FONT_TITLE_SIZE,
             scaling_factor,
@@ -113,7 +110,6 @@ class MD:
 
     @staticmethod
     def get_font_headline(scaling_factor: Optional[float] = None) -> Tuple[str, int]:
-        """获取大标题字体（支持DPI缩放）"""
         size = DPIHelper.scale_font_size(
             MD._BASE_FONT_HEADLINE_SIZE,
             scaling_factor,
@@ -126,7 +122,6 @@ class MD:
 
     @staticmethod
     def get_font_body(scaling_factor: Optional[float] = None) -> Tuple[str, int]:
-        """获取正文字体（支持DPI缩放）"""
         size = DPIHelper.scale_font_size(
             MD._BASE_FONT_BODY_SIZE,
             scaling_factor,
@@ -139,7 +134,6 @@ class MD:
 
     @staticmethod
     def get_font_label(scaling_factor: Optional[float] = None) -> Tuple[str, int]:
-        """获取标签字体（支持DPI缩放）"""
         size = DPIHelper.scale_font_size(
             MD._BASE_FONT_LABEL_SIZE,
             scaling_factor,
@@ -161,17 +155,14 @@ class MD:
 
     @staticmethod
     def scale_padding(padding: int, scaling_factor: Optional[float] = None) -> int:
-        """缩放间距值"""
         return DPIHelper.scale_value(padding, scaling_factor)
 
     @staticmethod
     def scale_radius(radius: int, scaling_factor: Optional[float] = None) -> int:
-        """缩放圆角值"""
         return DPIHelper.scale_value(radius, scaling_factor)
 
     @staticmethod
     def get_treeview_rowheight(scaling_factor: Optional[float] = None) -> int:
-        """计算Treeview的正确行高（基于实际字体度量）"""
         import tkinter.font as tkfont
         font_config = MD.get_font_ui(scaling_factor)
 

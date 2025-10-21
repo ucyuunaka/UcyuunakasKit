@@ -278,7 +278,6 @@ class FileHandler:
         return True
     
     def add_files(self, paths: List[str]) -> int:
-        """批量添加文件"""
         count = 0
         for path in paths:
             if self.add_file(path):
@@ -286,7 +285,6 @@ class FileHandler:
         return count
     
     def add_folder(self, folder_path: str, recursive: bool = True) -> int:
-        """添加文件夹中的所有支持文件"""
         if not os.path.isdir(folder_path):
             return 0
         
@@ -294,7 +292,6 @@ class FileHandler:
         return self.add_files(files)
     
     def remove_file(self, path: str) -> bool:
-        """移除文件"""
         for i, file in enumerate(self.files):
             if file.path == path:
                 self.files.pop(i)
@@ -302,18 +299,15 @@ class FileHandler:
         return False
     
     def clear(self):
-        """清空所有文件"""
         self.files.clear()
     
     def toggle_mark(self, path: str) -> bool:
-        """切换文件标记状态"""
         for file in self.files:
             if file.path == path:
                 file.marked = not file.marked
                 return file.marked
         return False
     def set_mark(self, path: str, marked: bool) -> bool:
-        """设置文件标记状态"""
         for file in self.files:
             if file.path == path:
                 file.marked = marked
@@ -321,7 +315,6 @@ class FileHandler:
         return False
     
     def set_marks_batch(self, paths: List[str], marked: bool) -> int:
-        """批量设置文件标记状态"""
         count = 0
         for file in self.files:
             if file.path in paths:
@@ -330,16 +323,13 @@ class FileHandler:
         return count
     
     def mark_all(self, marked: bool = True):
-        """标记/取消标记所有文件"""
         for file in self.files:
             file.marked = marked
     
     def get_marked_files(self) -> List[FileInfo]:
-        """获取所有已标记的文件"""
         return [f for f in self.files if f.marked]
     
     def get_stats(self) -> Dict:
-        """获取统计信息"""
         total = len(self.files)
         marked = len(self.get_marked_files())
         total_size = sum(f.size for f in self.files)
@@ -368,7 +358,6 @@ class FileHandler:
         return result
     
     def refresh_files(self) -> Dict:
-        """刷新所有文件，移除不存在的，更新缓存"""
         removed = []
         modified = []
         
@@ -390,7 +379,6 @@ class FileHandler:
         }
 
 def get_language(file_path: str) -> str:
-    """根据文件扩展名获取编程语言"""
     _, ext = os.path.splitext(file_path.lower())
     
     for language, extensions in LANGUAGE_EXTENSIONS.items():
@@ -400,11 +388,9 @@ def get_language(file_path: str) -> str:
     return "Text"
 
 def get_all_languages() -> List[str]:
-    """获取所有支持的语言"""
     return sorted(LANGUAGE_EXTENSIONS.keys())
 
 def scan_folder(folder_path: str, recursive: bool = True) -> List[str]:
-    """扫描文件夹获取所有支持的文件"""
     supported_files = []
     all_extensions = [ext for exts in LANGUAGE_EXTENSIONS.values() for ext in exts]
     
@@ -426,7 +412,6 @@ def scan_folder(folder_path: str, recursive: bool = True) -> List[str]:
     return supported_files
 
 def format_size(size_bytes: int) -> str:
-    """格式化文件大小"""
     if size_bytes < 1024:
         return f"{size_bytes} B"
     elif size_bytes < 1024 * 1024:

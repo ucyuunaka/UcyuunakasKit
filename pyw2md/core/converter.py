@@ -152,12 +152,10 @@ class Converter:
         self.chunk_size = 50  # 批量写入大小，优化I/O性能
 
     def set_template(self, template: str):
-        """设置模板"""
         if template in TEMPLATES:
             self.template = template
 
     def set_base_path(self, path: str):
-        """设置基准路径"""
         self.base_path = path
 
     def convert_file(self, file_info: FileInfo) -> str:
@@ -354,7 +352,6 @@ class Converter:
         }
 
     def _generate_header(self, files: list[FileInfo]) -> str:
-        """生成文档头部 - 使用 join 优化"""
         from core.file_handler import format_size
 
         total_size = sum(f.size for f in files)
@@ -374,7 +371,6 @@ class Converter:
         return ''.join(header_parts)
 
     def _generate_footer(self, success: int, total: int) -> str:
-        """生成文档尾部 - 使用 join 优化"""
         footer_parts = [
             "\n\n---\n\n",
             "## 转换统计\n\n",
@@ -387,9 +383,7 @@ class Converter:
 
         return ''.join(footer_parts)
 def get_template_names() -> list[str]:
-    """获取所有模板名称"""
     return list(TEMPLATES.keys())
 
 def preview_template(template_name: str) -> str:
-    """预览模板内容"""
     return TEMPLATES.get(template_name, TEMPLATES["默认"])

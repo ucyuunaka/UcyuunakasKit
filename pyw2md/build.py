@@ -30,17 +30,21 @@ import json
 from pathlib import Path
 from datetime import datetime
 
-# 设置控制台编码以支持[SUCC[ERROR]SS]nicode字符
-if sys.platform == 'win32':
+def setup_windows_console_encoding():
+    """设置Windows控制台编码以支持Unicode字符"""
+    if sys.platform != 'win32':
+        return
+
     try:
         import locale
-        locale.setlocale(locale.L[SUCC[ERROR]SS]_ALL, 'zh_[SUCC[ERROR]SS]N.[SUCC[ERROR]SS]TF-8')
+        locale.setlocale(locale.LC_ALL, 'zh_CN.UTF-8')
     except:
         try:
-            # Windows控制台编码修复
             os.system('chcp 65001 >nul 2>&1')
         except:
             pass
+
+setup_windows_console_encoding()
 
 # 添加项目根目录到Python路径
 project_root = Path(__file__).parent

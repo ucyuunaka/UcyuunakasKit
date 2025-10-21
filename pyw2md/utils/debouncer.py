@@ -77,7 +77,6 @@ class SimpleDebouncer:
             return True
     
     def _execute(self, *args, **kwargs):
-        """执行回调函数"""
         try:
             with self._lock:
                 self._timer = None
@@ -168,7 +167,6 @@ class SimpleDebouncer:
             return self._last_call_time
     
     def reset(self):
-        """重置防抖器状态"""
         with self._lock:
             if self._timer is not None:
                 self._timer.cancel()
@@ -228,13 +226,11 @@ class DebouncerGroup:
             return self._debouncers.get(name)
     
     def cancel_all(self):
-        """取消所有防抖器"""
         with self._lock:
             for debouncer in self._debouncers.values():
                 debouncer.cancel()
     
     def flush_all(self):
-        """立即执行所有待执行的回调"""
         with self._lock:
             for debouncer in self._debouncers.values():
                 debouncer.flush()
@@ -257,7 +253,6 @@ class DebouncerGroup:
             return False
     
     def clear_all(self):
-        """清除所有防抖器"""
         with self._lock:
             for debouncer in self._debouncers.values():
                 debouncer.cancel()
