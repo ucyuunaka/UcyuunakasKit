@@ -306,12 +306,12 @@ class FileListPanel(Card):
         self.file_tree.heading('size', text='大小', anchor='e')
         
         # 滚动条
-        vsb = ttk.Scrollbar(list_container, orient="vertical", command=self.file_tree.yview)
-        self.file_tree.configure(yscrollcommand=vsb.set)
-        
+        vertical_scrollbar = ttk.Scrollbar(list_container, orient="vertical", command=self.file_tree.yview)
+        self.file_tree.configure(yscrollcommand=vertical_scrollbar.set)
+
         # 布局
         self.file_tree.grid(row=0, column=0, sticky='nsew')
-        vsb.grid(row=0, column=1, sticky='ns')
+        vertical_scrollbar.grid(row=0, column=1, sticky='ns')
         
         list_container.grid_rowconfigure(0, weight=1)
         list_container.grid_columnconfigure(0, weight=1)
@@ -336,13 +336,13 @@ class FileListPanel(Card):
             ("所有支持的文件", "*.py *.js *.java *.cpp *.html *.css"),
             ("所有文件", "*.*")
         ]
-        
-        files = filedialog.askopenfilenames(title="选择代码文件", filetypes=filetypes)
-        
-        if files:
+
+        selected_files = filedialog.askopenfilenames(title="选择代码文件", filetypes=filetypes)
+
+        if selected_files:
             self._show_loading(True)
             def add_files_thread():
-                count = self.file_handler.add_files(list(files))
+                count = self.file_handler.add_files(list(selected_files))
                 self.after(0, lambda: self._on_files_added(count))
             
             thread = threading.Thread(target=add_files_thread, daemon=True)
@@ -363,12 +363,12 @@ class FileListPanel(Card):
     
     def _add_folder(self):
         """添加文件夹"""
-        folder = filedialog.askdirectory(title="选择文件夹")
-        
-        if folder:
+        selected_folder = filedialog.askdirectory(title="选择文件夹")
+
+        if selected_folder:
             self._show_loading(True)
             def add_folder_thread():
-                count = self.file_handler.add_folder(folder)
+                count = self.file_handler.add_folder(selected_folder)
                 self.after(0, lambda: self._on_folder_added(count))
             
             thread = threading.Thread(target=add_folder_thread, daemon=True)

@@ -6,7 +6,7 @@ import customtkinter as ctk
 import tkinter as tk
 from config.theme import MD
 from ui.widgets.material_card import Card, Btn
-from core.converter import get_template_names, Converter
+from core.converter import get_available_template_names, Converter
 from core.file_handler import FileHandler, format_size
 
 class ControlPanel(Card):
@@ -83,7 +83,7 @@ class ControlPanel(Card):
         self.template_var = tk.StringVar(value="默认")
         template_combo = ctk.CTkComboBox(
             section_container,
-            values=get_template_names(),
+            values=get_available_template_names(),
             variable=self.template_var,
             state='readonly',
             fg_color=MD.BG_SURFACE,
@@ -160,7 +160,7 @@ class ControlPanel(Card):
     # 事件处理
     def _on_template_changed(self, template_name):
         """模板改变事件"""
-        self.converter.set_template(template_name)
+        self.converter.set_markdown_template(template_name)
     
     def _preview_template(self):
         """预览模板"""
@@ -169,7 +169,7 @@ class ControlPanel(Card):
     
     def _preview_conversion(self):
         """预览转换"""
-        marked_files = self.file_handler.get_marked_files()
+        marked_files = self.file_handler.get_selected_files()
         
         if not marked_files:
             if self.on_preview_callback:
@@ -181,7 +181,7 @@ class ControlPanel(Card):
     
     def _start_conversion(self):
         """开始转换"""
-        marked_files = self.file_handler.get_marked_files()
+        marked_files = self.file_handler.get_selected_files()
         
         if not marked_files:
             if self.on_convert_callback:

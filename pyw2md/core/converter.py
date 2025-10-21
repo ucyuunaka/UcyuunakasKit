@@ -36,7 +36,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from core.file_handler import FileInfo
 
 # Markdown 模板定义
-# 采用字典结构存储，便于扩展和维护
+
 # 每个模板支持以下变量替换：
 # - {basename}: 文件名（不含路径）
 # - {relative_path}: 相对路径
@@ -151,11 +151,11 @@ class Converter:
         self.max_workers = max_workers  # 线程池并发度
         self.chunk_size = 50  # 批量写入大小，优化I/O性能
 
-    def set_template(self, template: str):
+    def set_markdown_template(self, template: str):
         if template in TEMPLATES:
             self.template = template
 
-    def set_base_path(self, path: str):
+    def set_output_directory(self, path: str):
         self.base_path = path
 
     def convert_file(self, file_info: FileInfo) -> str:
@@ -228,42 +228,81 @@ class Converter:
             # 转换失败时返回错误注释，不影响整体转换流程
             return f"<!-- ❌ 错误: 无法处理文件 {file_info.path}: {str(e)} -->\n\n"
 
+def _setup_parallel_conversion(self, files: list[FileInfo]) -> dict:
+        """设置并行转换任务"""
+        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+            return {
+                executor.submit(self.convert_file, file_info): (i, file_info)
+                for i, file_info in enumerate(files, 1)
+            }
+    
+    def _collect_conversion_results(self, future_to_file: dict, total: int) -> tuple[int, list, dict]:
+        """收集转换结果"""
+        success = 0
+        errors = []
+        results = {}
+        
+        for future in as_completed(future_to_file):
+            i, file_info = future_to_file[future]
+            
+            try:
+                markdown = future.result()
+                results[i] = markdown
+                success += 1
+            except Exception as e:
+                errors.append({
+                    'file': file_info.path,
+                    'error': str(e)
+                })
+                results[i] = f"<!-- ❌ 错误: {str(e)} -->\n\n"
+        
+        return success, errors, results
+    
+    def _write_buffered_results(self, f, results: dict, total: int, files: list[FileInfo], progress_callback):
+        """写入缓冲结果"""
+        buffer = StringIO()
+        buffer_count = 0
+        
+        for i in range(1, total + 1):
+            if i in results:
+                # 回调进度
+                if progress_callback:
+                    progress_callback(i, total, files[i-1].name)
+                
+                # 写入缓冲区
+                buffer.write(results[i])
+                buffer_count += 1
+                
+                # 批量写入磁盘
+                if buffer_count >= self.chunk_size:
+                    f.write(buffer.getvalue())
+                    buffer.close()
+                    buffer = StringIO()
+                    buffer_count = 0
+        
+        # 写入剩余缓冲区
+        if buffer_count > 0:
+            f.write(buffer.getvalue())
+            buffer.close()
+
     def convert_files(self,
                      files: list[FileInfo],
                      output_path: str,
                      progress_callback: Optional[Callable[[int, int, str], None]] = None) -> dict:
         """
         批量转换文件 - 性能优化版
-
+        
         核心优化策略：
         1. 线程池并行处理：使用ThreadPoolExecutor并行读取和转换文件
         2. StringIO缓冲区：避免频繁的字符串拼接操作
         3. 批量磁盘写入：每50个文件批量写入一次，减少I/O操作
         4. 异常隔离：单个文件失败不影响整体转换流程
-
-        处理流程：
-        1. 写入文档头部信息（统计、时间、模板等）
-        2. 提交所有文件到线程池进行并行转换
-        3. 收集转换结果并保持原始顺序
-        4. 批量写入转换结果到输出文件
-        5. 写入文档尾部信息（统计、完成时间等）
-
-        性能特点：
-        - 并行度可配置（max_workers），默认4个线程
-        - 批量大小可调整（chunk_size），默认50个文件
-        - 支持实时进度回调，便于UI显示
-        - 内存使用优化，避免同时加载所有文件内容
-
-        错误处理：
-        - 单个文件转换失败时记录错误但不中断整体流程
-        - 输出文件写入失败时返回错误信息
-        - 所有异常都被捕获并包含在返回结果中
-
+        
         参数说明：
         - files: 待转换的文件信息列表
         - output_path: 输出Markdown文件路径
         - progress_callback: 进度回调函数，参数为(current, total, filename)
-
+        
         返回值：
         - success: 转换是否成功
         - message: 结果描述信息
@@ -272,68 +311,24 @@ class Converter:
         - errors: 错误信息列表
         """
         total = len(files)
-        success = 0
-        errors = []
-
+        
         try:
             with open(output_path, 'w', encoding='utf-8', buffering=8192*16) as f:
                 # 写入文档头部
                 f.write(self._generate_header(files))
-
-                # 使用 StringIO 缓冲区优化字符串拼接
-                buffer = StringIO()
-                buffer_count = 0
-
-                # 使用线程池并行转换
-                with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-                    # 提交所有任务
-                    future_to_file = {
-                        executor.submit(self.convert_file, file_info): (i, file_info)
-                        for i, file_info in enumerate(files, 1)
-                    }
-
-                    # 按完成顺序处理（保持文件顺序需要排序）
-                    results = {}
-                    for future in as_completed(future_to_file):
-                        i, file_info = future_to_file[future]
-
-                        try:
-                            markdown = future.result()
-                            results[i] = markdown
-                            success += 1
-                        except Exception as e:
-                            errors.append({
-                                'file': file_info.path,
-                                'error': str(e)
-                            })
-                            results[i] = f"<!-- ❌ 错误: {str(e)} -->\n\n"
-
-                    # 按顺序写入结果（使用缓冲区）
-                    for i in range(1, total + 1):
-                        if i in results:
-                            # 回调进度
-                            if progress_callback:
-                                progress_callback(i, total, files[i-1].name)
-
-                            # 写入缓冲区
-                            buffer.write(results[i])
-                            buffer_count += 1
-
-                            # 批量写入磁盘
-                            if buffer_count >= self.chunk_size:
-                                f.write(buffer.getvalue())
-                                buffer.close()
-                                buffer = StringIO()
-                                buffer_count = 0
-
-                    # 写入剩余缓冲区
-                    if buffer_count > 0:
-                        f.write(buffer.getvalue())
-                        buffer.close()
-
+                
+                # 设置并行转换任务
+                future_to_file = self._setup_parallel_conversion(files)
+                
+                # 收集转换结果
+                success, errors, results = self._collect_conversion_results(future_to_file, total)
+                
+                # 写入缓冲结果
+                self._write_buffered_results(f, results, total, files, progress_callback)
+                
                 # 写入文档尾部
                 f.write(self._generate_footer(success, total))
-
+                
         except Exception as e:
             return {
                 'success': False,
@@ -342,7 +337,7 @@ class Converter:
                 'total': total,
                 'errors': errors
             }
-
+        
         return {
             'success': True,
             'message': f'成功转换 {success}/{total} 个文件',
@@ -382,7 +377,7 @@ class Converter:
         ]
 
         return ''.join(footer_parts)
-def get_template_names() -> list[str]:
+def get_available_template_names() -> list[str]:
     return list(TEMPLATES.keys())
 
 def preview_template(template_name: str) -> str:

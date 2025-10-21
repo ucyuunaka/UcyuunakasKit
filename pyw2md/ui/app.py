@@ -551,7 +551,7 @@ class MaterialApp(AppBase):
         self._show_toast(message, type)
     
     def _update_status_bar_stats(self):
-        stats = self.file_handler.get_stats()
+        stats = self.file_handler.get_processing_statistics()
         self.status_bar.update_stats(
             stats['marked'],
             stats['total'],
@@ -592,7 +592,7 @@ class MaterialApp(AppBase):
         self.control_panel.show_progress()
         
         template = self.control_panel.get_template()
-        self.converter.set_template(template)
+        self.converter.set_markdown_template(template)
         
         # 异步转换
         import threading

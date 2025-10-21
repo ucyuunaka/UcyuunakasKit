@@ -36,10 +36,7 @@ import os
 from typing import List, Dict, Optional
 from dataclasses import dataclass
 
-# 语言扩展名映射表
-# 支持39种主流编程语言和标记语言
-# 采用字典结构便于扩展和维护
-# 每种语言对应一个或多个文件扩展名
+
 LANGUAGE_EXTENSIONS = {
     'Python': ['.py', '.pyw', '.pyi'],
     'JavaScript': ['.js', '.jsx', '.mjs'],
@@ -74,32 +71,13 @@ LANGUAGE_EXTENSIONS = {
 
 @dataclass
 class FileInfo:
-    """
-    文件信息数据类 - 核心数据结构
-
-    设计思路：
-    - 使用dataclass简化代码，自动生成初始化方法
-    - 封装文件相关的所有元数据，提供统一的访问接口
-    - 实现属性缓存机制，避免重复的文件系统调用
-    - 支持文件状态跟踪和变更检测
-
+    """文件信息数据类
+    
     核心属性：
     - path: 文件完整路径，唯一标识符
     - marked: 是否被标记为选中状态，用于批量操作
     - _cached_size: 缓存的文件大小，避免重复获取
     - _cached_mtime: 缓存的修改时间，用于变更检测
-
-    属性设计：
-    - name: 文件名（不含路径），通过property动态计算
-    - language: 编程语言，基于扩展名自动识别
-    - size: 文件大小，带异常处理的安全访问
-    - exists: 文件存在性检查
-    - mtime: 修改时间，带异常处理的安全访问
-
-    缓存策略：
-    - 延迟初始化：属性首次访问时才获取真实值
-    - 变更检测：通过比较缓存值和当前值检测文件变化
-    - 手动更新：提供update_cache方法手动刷新缓存
     """
     path: str                # 文件完整路径
     marked: bool = True      # 是否被标记选中
@@ -108,92 +86,44 @@ class FileInfo:
     
     @property
     def name(self) -> str:
-        """
-        获取文件名（不含路径）
-
-        通过os.path.basename动态计算，确保始终与当前路径一致
-        使用property装饰器提供只读访问，避免外部修改
-        """
+        """获取文件名（不含路径）"""
         return os.path.basename(self.path)
 
     @property
     def language(self) -> str:
-        """
-        获取文件对应的编程语言
-
-        基于文件扩展名自动识别，调用全局get_language函数
-        支持39种主流编程语言，未知类型返回"Text"
-        使用property确保语言识别的实时性和准确性
-        """
+        """获取文件对应的编程语言"""
         return get_language(self.path)
 
     @property
     def size(self) -> int:
-        """
-        获取文件大小（字节）
-
-        通过系统调用os.path.getsize获取实际文件大小
-        提供异常处理，文件访问失败时返回0
-        不缓存结果，确保获取最新的文件大小信息
-        """
+        """获取文件大小（字节）"""
         try:
             return os.path.getsize(self.path)
         except:
-            # 文件不存在或无法访问时的安全降级
             return 0
 
     @property
     def exists(self) -> bool:
-        """
-        检查文件是否存在
-
-        使用os.path.exists进行存在性验证
-        实时检查，不依赖缓存，确保状态准确性
-        用于文件状态监控和清理无效文件
-        """
+        """检查文件是否存在"""
         return os.path.exists(self.path)
 
     @property
     def mtime(self) -> float:
-        """
-        获取文件最后修改时间
-
-        通过os.path.getmtime获取UNIX时间戳
-        提供异常处理，文件访问失败时返回0
-        用于文件变更检测和排序操作
-        """
+        """获取文件最后修改时间"""
         try:
             return os.path.getmtime(self.path)
         except:
-            # 文件不存在或无法访问时的安全降级
             return 0
 
     def is_modified(self) -> bool:
-        """
-        检查文件是否被修改
-
-        通过比较缓存的修改时间和当前修改时间检测变化
-        首次调用时会初始化缓存并返回False
-        后续调用基于缓存值进行比较，提供高效的变更检测
-
-        返回值：
-        - True: 文件已被修改
-        - False: 文件未被修改（或首次检查）
-        """
+        """检查文件是否被修改"""
         if self._cached_mtime is None:
-            # 首次检查时初始化缓存
             self._cached_mtime = self.mtime
             return False
         return self.mtime != self._cached_mtime
 
     def update_cache(self):
-        """
-        手动更新缓存信息
-
-        刷新文件大小和修改时间的缓存值
-        用于文件监控和状态同步
-        确保缓存值与文件系统状态一致
-        """
+        """手动更新缓存信息"""
         self._cached_size = self.size
         self._cached_mtime = self.mtime
 
@@ -307,7 +237,7 @@ class FileHandler:
                 file.marked = not file.marked
                 return file.marked
         return False
-    def set_mark(self, path: str, marked: bool) -> bool:
+    def set_file_selection(self, path: str, marked: bool) -> bool:
         for file in self.files:
             if file.path == path:
                 file.marked = marked
@@ -326,12 +256,12 @@ class FileHandler:
         for file in self.files:
             file.marked = marked
     
-    def get_marked_files(self) -> List[FileInfo]:
+    def get_selected_files(self) -> List[FileInfo]:
         return [f for f in self.files if f.marked]
     
-    def get_stats(self) -> Dict:
+    def get_processing_statistics(self) -> Dict:
         total = len(self.files)
-        marked = len(self.get_marked_files())
+        marked = len(self.get_selected_files())
         total_size = sum(f.size for f in self.files)
         languages = set(f.language for f in self.files)
         
