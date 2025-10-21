@@ -1,7 +1,3 @@
-"""
-文件监控模块 - 自动检测文件变化
-"""
-
 import os
 import logging
 from typing import Callable, Dict, Set, Optional
@@ -14,22 +10,18 @@ from .constants import (
     FILE_CHANGE_MODIFIED, FILE_CHANGE_DELETED
 )
 
-# 配置日志
 logger = logging.getLogger(__name__)
 
 
 class FileWatcherError(Exception):
-    """文件监控器异常"""
     pass
 
 
 class MonitoringError(Exception):
-    """监控错误异常"""
     pass
 
 
 class FileChangeHandler(FileSystemEventHandler):
-    """文件变化处理器"""
     
     def __init__(self, file_state_manager: FileStateManager, file_change_callback: Callable, monitored_files: Set[str], error_callback: Callable):
         super().__init__()
@@ -41,7 +33,6 @@ class FileChangeHandler(FileSystemEventHandler):
         self.debouncer = SimpleDebouncer(self._process_changes, delay=0.3)
     
     def _process_changes(self):
-        """处理累积的文件变化"""
         try:
             changes = self.file_state_manager.get_and_clear_changes()
             if changes:
@@ -53,18 +44,14 @@ class FileChangeHandler(FileSystemEventHandler):
     def on_modified(self, event):
         if event.is_directory:
             return
-        
+
         try:
             file_path = os.path.abspath(event.src_path)
-            
-            
+
             if file_path not in self.monitored_files:
                 return
-            
-  
+
             self.file_state_manager.add_change(file_path, 'modified')
-            
-  
             self.debouncer.schedule()
             
         except Exception as e:
@@ -73,18 +60,14 @@ class FileChangeHandler(FileSystemEventHandler):
     def on_deleted(self, event):
         if event.is_directory:
             return
-        
+
         try:
             file_path = os.path.abspath(event.src_path)
-            
-            
+
             if file_path not in self.monitored_files:
                 return
-            
-  
+
             self.file_state_manager.add_change(file_path, 'deleted')
-            
-  
             self.debouncer.schedule()
             
         except Exception as e:
@@ -92,19 +75,7 @@ class FileChangeHandler(FileSystemEventHandler):
 
 
 class FileWatcher:
-    """文件监控器"""
-    
     def __init__(self, file_change_callback: Callable, error_callback: Optional[Callable] = None):
-        """
-        初始化文件监控器
-        
-        Args:
-            file_change_callback: 文件变化回调函数 callback(event_type, file_path)
-                     event_type: 'modified' 或 'deleted'
-            error_callback: 错误回调函数 callback(error_message, error_type, exception=None)
-                           error_type: 'directory_watch_failed', 'observer_start_failed', 
-                                       'observer_stop_failed', 'monitoring_disabled' 等
-        """
         self.file_change_callback = file_change_callback
         self.error_callback = error_callback or self._default_error_callback
         self.observer = Observer()
@@ -119,24 +90,18 @@ class FileWatcher:
         self.file_state_manager = FileStateManager()
     
     def _default_error_callback(self, error_message: str, error_type: str, exception: Optional[Exception] = None):
-        """默认错误回调函数"""
         logger.error(f"文件监控错误 [{error_type}]: {error_message}")
         # 这里可以替换为用户可见的消息显示
         print(f"文件监控错误: {error_message}")
     
     def _handle_error_safely(self, error_message: str, error_type: str, exception: Optional[Exception] = None):
-        """处理错误"""
         self.error_count += 1
-        
-  
+
         logger.error(f"文件监控错误 [{error_type}]: {error_message}")
         if exception:
             logger.exception(f"异常详情: {exception}")
-        
-  
+
         self.error_callback(error_message, error_type, exception)
-        
-    
         if self.error_count >= self.max_errors:
             self.is_monitoring_enabled = False
             error_msg = f"文件监控错误次数过多({self.error_count})，已自动禁用监控功能"
@@ -191,8 +156,8 @@ class FileWatcher:
             self._handle_error_safely(error_msg, "observer_stop_failed", e)
             return False
     
-def _validate_file_for_monitoring(self, file_path: str) -> bool:
-        """验证文件是否可以监控"""
+    def _validate_file_for_monitoring(self, file_path: str) -> bool:
+        print(f"[DEBUG] 验证文件监控: {file_path}")
         if not self.is_monitoring_enabled:
             self._handle_error_safely(f"无法添加文件监控 {file_path}，监控功能已被禁用", "monitoring_disabled")
             return False
@@ -202,10 +167,10 @@ def _validate_file_for_monitoring(self, file_path: str) -> bool:
             self._handle_error_safely(error_msg, "file_not_found")
             return False
         
+        print(f"[DEBUG] 文件验证通过: {file_path}")
         return True
     
     def _setup_directory_monitoring(self, file_path: str, dir_path: str) -> bool:
-        """设置目录监控"""
         if dir_path not in self.monitored_dirs:
             self.monitored_dirs[dir_path] = set()
             
@@ -233,7 +198,6 @@ def _validate_file_for_monitoring(self, file_path: str) -> bool:
         return True
     
     def _add_file_to_monitoring_sets(self, file_path: str, dir_path: str):
-        """将文件添加到监控集合"""
         self.monitored_files.add(file_path)
         self.monitored_dirs[dir_path].add(file_path)
         logger.debug(f"添加文件到监控: {file_path}")

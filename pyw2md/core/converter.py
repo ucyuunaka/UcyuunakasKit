@@ -228,8 +228,9 @@ class Converter:
             # 转换失败时返回错误注释，不影响整体转换流程
             return f"<!-- ❌ 错误: 无法处理文件 {file_info.path}: {str(e)} -->\n\n"
 
-def _setup_parallel_conversion(self, files: list[FileInfo]) -> dict:
+    def _setup_parallel_conversion(self, files: list[FileInfo]) -> dict:
         """设置并行转换任务"""
+        print(f"[DEBUG] 设置并行转换任务，文件数量: {len(files)}")
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             return {
                 executor.submit(self.convert_file, file_info): (i, file_info)
@@ -238,6 +239,7 @@ def _setup_parallel_conversion(self, files: list[FileInfo]) -> dict:
     
     def _collect_conversion_results(self, future_to_file: dict, total: int) -> tuple[int, list, dict]:
         """收集转换结果"""
+        print(f"[DEBUG] 收集转换结果，总任务数: {total}")
         success = 0
         errors = []
         results = {}
@@ -249,13 +251,16 @@ def _setup_parallel_conversion(self, files: list[FileInfo]) -> dict:
                 markdown = future.result()
                 results[i] = markdown
                 success += 1
+                print(f"[DEBUG] 文件转换成功: {file_info.path}")
             except Exception as e:
                 errors.append({
                     'file': file_info.path,
                     'error': str(e)
                 })
                 results[i] = f"<!-- ❌ 错误: {str(e)} -->\n\n"
+                print(f"[DEBUG] 文件转换失败: {file_info.path}, 错误: {str(e)}")
         
+        print(f"[DEBUG] 转换完成，成功: {success}, 失败: {len(errors)}")
         return success, errors, results
     
     def _write_buffered_results(self, f, results: dict, total: int, files: list[FileInfo], progress_callback):
