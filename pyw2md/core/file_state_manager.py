@@ -80,22 +80,10 @@ class FileStateManager:
             return list(self._changes.values())
     
     def has_changes(self) -> bool:
-        """
-        检查是否有待处理的变化
-        
-        Returns:
-            bool: 是否有待处理的变化
-        """
         with self._lock:
             return len(self._changes) > 0
     
     def get_change_count(self) -> int:
-        """
-        获取待处理变化的数量
-        
-        Returns:
-            int: 变化数量
-        """
         with self._lock:
             return len(self._changes)
     
@@ -130,7 +118,6 @@ class FileStateManager:
             return False
     
     def clear_changes(self):
-        """清除所有变化记录"""
         with self._lock:
             self._changes.clear()
             self._last_cleared_time = time.time()
@@ -151,12 +138,6 @@ class FileStateManager:
             return 'normal'
     
     def get_last_cleared_time(self) -> float:
-        """
-        获取上次清除变化的时间
-        
-        Returns:
-            float: 上次清除时间戳
-        """
         with self._lock:
             return self._last_cleared_time
     
@@ -179,12 +160,6 @@ class FileStateManager:
                 del self._changes[path]
     
     def get_summary(self) -> Dict[str, int]:
-        """
-        获取变化摘要统计
-        
-        Returns:
-            Dict[str, int]: 变化统计信息
-        """
         with self._lock:
             summary = {
                 'total': len(self._changes),

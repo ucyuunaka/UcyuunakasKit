@@ -1,5 +1,5 @@
 """
-DPI Helper Module - Cross-platform DPI detection and scaling support
+DPI缩放模块 - 跨平台DPI检测和缩放支持
 """
 import sys
 import os
@@ -12,7 +12,7 @@ from typing import Optional, Tuple
 class DPIHelper:
     """Cross-platform DPI detection and scaling helper class"""
 
-    # Standard DPI baseline
+    # 标准DPI基准
     STANDARD_DPI = 96.0
 
     @staticmethod
@@ -32,7 +32,7 @@ class DPIHelper:
         elif system == "Darwin":  # macOS
             return DPIHelper._get_macos_dpi()
         else:
-            # Default to standard DPI for unknown platforms
+            # 未知平台默认使用标准DPI
             return (DPIHelper.STANDARD_DPI, DPIHelper.STANDARD_DPI)
 
     @staticmethod
@@ -44,7 +44,7 @@ class DPIHelper:
             float: Scaling factor (e.g., 1.25 for 120 DPI, 1.5 for 144 DPI)
         """
         dpi_x, dpi_y = DPIHelper.get_system_dpi()
-        # Use the average of X and Y DPI
+        # 使用X和Y DPI的平均值
         dpi = (dpi_x + dpi_y) / 2
         return dpi / DPIHelper.STANDARD_DPI
 
@@ -65,14 +65,14 @@ class DPIHelper:
             Tuple[float, float]: Windows system DPI (dpi_x, dpi_y)
         """
         try:
-            # Try to use GetDpiForSystem (Windows 10+)
+            # 尝试使用GetDpiForSystem (Windows 10+)
             try:
                 user32 = ctypes.windll.user32
                 user32.GetDpiForSystem.restype = wintypes.UINT
                 dpi = user32.GetDpiForSystem()
                 return (float(dpi), float(dpi))
             except AttributeError:
-                # Fallback for older Windows versions
+                # 旧版本Windows的降级方案
                 # Get DPI from the window device context
                 gdi32 = ctypes.windll.gdi32
                 user32 = ctypes.windll.user32

@@ -1,27 +1,5 @@
 """
-主应用窗口 - 优化版（拖放降级 + 性能优化）
-
-核心设计思路：
-- 采用Material Design设计语言，提供现代化的用户界面
-- 实现拖放功能的优雅降级，确保在不同环境下都能正常工作
-- 通过异步处理机制避免UI阻塞，提升用户体验
-- 集成文件系统监控，实时响应文件变化
-- 使用防抖技术优化窗口调整性能
-- 提供完整的错误处理和用户反馈机制
-
-架构特点：
-- 基于CustomTkinter构建，兼容tkinterdnd2拖放扩展
-- 采用MVC模式分离界面、业务逻辑和数据处理
-- 通过混合类实现功能模块的灵活组合
-- 使用事件驱动架构处理用户交互和系统通知
-- 实现状态持久化，保存用户工作环境
-
-性能优化策略：
-- 异步文件处理避免界面卡顿
-- 防抖机制减少不必要的UI更新
-- 延迟加载和按需初始化
-- 资源清理和内存管理
-- 线程安全的UI更新机制
+主应用窗口
 """
 
 import customtkinter as ctk
@@ -32,9 +10,7 @@ from core.constants import (
     MSG_NO_CHANGES, MSG_REFRESH_FAILED, UI_UPDATE_DEBOUNCE_MS
 )
 
-# 拖放功能模块的导入采用安全降级策略
-# 如果tkinterdnd2不可用，应用会自动降级为文件选择模式
-# 新增：使用utils.packaging模块优化打包环境下的导入
+# 拖放功能安全降级导入
 try:
     from utils.packaging import safe_import_tkinterdnd2, print_packaging_debug_info
     # 在打包环境中打印调试信息
@@ -63,58 +39,19 @@ from ui.components.status_bar import StatusBar
 from ui.components.dialogs import TemplatePreviewDialog, ConversionPreviewDialog
 
 # UI更新防抖时间常量（毫秒）
-# 统一所有UI组件的防抖时间，提升用户体验一致性
 UI_UPDATE_DEBOUNCE = UI_UPDATE_DEBOUNCE_MS
 
 
 # ============ 优雅降级基类 ============
 class DragDropMixin:
-    """
-    拖放功能混合类 - 提供安全的降级处理
-
-    设计思路：
-    - 通过混合类模式为应用添加拖放功能支持
-    - 实现安全降级，当拖放功能不可用时提供替代方案
-    - 封装拖放相关操作，提供统一的调用接口
-    - 避免直接依赖tkinterdnd2，提高代码的可移植性
-
-    技术特点：
-    - 运行时检测拖放功能可用性
-    - 提供空操作降级，确保代码正常执行
-    - 统一的错误处理和异常捕获
-    """
+    """拖放功能混合类 - 提供安全的降级处理"""
 
     def drop_target_register(self, *args, **kwargs):
-        """
-        安全的拖放注册方法
-
-        功能说明：
-        - 检测拖放功能是否可用
-        - 调用父类的拖放注册方法
-        - 提供降级处理，避免功能缺失导致的崩溃
-
-        返回值：
-        - 成功时返回父类方法的执行结果
-        - 降级时返回None，确保调用方能够正常处理
-        """
         if DRAG_DROP_AVAILABLE and hasattr(super(), 'drop_target_register'):
             return super().drop_target_register(*args, **kwargs)
         return None
 
     def dnd_bind(self, *args, **kwargs):
-        """
-        安全的拖放绑定方法
-
-        功能说明：
-        - 绑定拖放事件处理函数
-        - 提供功能降级，确保应用稳定运行
-        - 封装复杂的拖放绑定逻辑
-
-        设计考量：
-        - 避免直接暴露底层拖放API的复杂性
-        - 提供一致的调用接口，简化上层代码
-        - 通过返回值判断绑定是否成功
-        """
         if DRAG_DROP_AVAILABLE and hasattr(super(), 'dnd_bind'):
             return super().dnd_bind(*args, **kwargs)
         return None
@@ -483,7 +420,6 @@ class MaterialApp(AppBase):
             self._show_toast("没有找到支持的文件", 'warning')
     
     def _parse_drop_files(self, data):
-        """解析拖放的文件路径"""
         if data.startswith('{'):
             files = []
             current = ""
@@ -505,7 +441,6 @@ class MaterialApp(AppBase):
             return data.split()
     
     def _on_file_changed(self, event_type: str, file_path: str):
-        """文件变化回调 - 使用FileStateManager"""
         # 使用状态栏显示文件变化消息，替代复杂的通知栏
         if event_type == 'modified':
             self.status_bar.show_message(MSG_FILE_MODIFIED.format(filename=os.path.basename(file_path)), 3000)
@@ -513,7 +448,6 @@ class MaterialApp(AppBase):
             self.status_bar.show_message(MSG_FILE_DELETED.format(filename=os.path.basename(file_path)), 3000)
 
     def _refresh_changed_files(self):
-        """刷新变化的文件 - 使用FileStateManager"""
         try:
             # 从FileWatcher获取状态管理器中的变化
             changes = self.file_watcher.file_state_manager.get_and_clear_changes()
@@ -555,7 +489,6 @@ class MaterialApp(AppBase):
         
         
     def _build_ui(self):
-        """构建UI"""
         self.grid_columnconfigure(0, weight=3)
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -586,7 +519,6 @@ class MaterialApp(AppBase):
             self.after(100, self._setup_drag_drop)
     
     def _on_files_added_to_list(self, file_paths: list):
-        """文件添加到列表的回调"""
         if not self.watch_enabled:
             return
         
@@ -594,7 +526,6 @@ class MaterialApp(AppBase):
             self.file_watcher.add_file(file_path)
     
     def _on_window_configure(self, event):
-        """窗口调整事件"""
         if event.widget != self:
             return
         
@@ -604,12 +535,10 @@ class MaterialApp(AppBase):
         self._resize_after_id = self.after(UI_UPDATE_DEBOUNCE, self._handle_resize)
     
     def _handle_resize(self):
-        """处理窗口调整"""
         self._resize_after_id = None
         self.update_idletasks()
     
     def _on_file_update(self, message: str, type: str = 'info'):
-        """文件更新回调"""
         # 使用防抖机制更新状态栏，避免频繁更新
         if self._status_update_after_id:
             self.after_cancel(self._status_update_after_id)

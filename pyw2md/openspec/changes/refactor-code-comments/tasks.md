@@ -1,11 +1,11 @@
 ## 1. 垃圾注释清理阶段
-- [ ] 1.1 清理 `utils/helpers.py` 中所有冗余的docstring和行内注释
-- [ ] 1.2 清理 `core/file_state_manager.py` 中简单getter方法的废话注释
-- [ ] 1.3 清理 `core/file_watcher.py` 中自解释代码的注释
-- [ ] 1.4 清理 `ui/` 模块中显而易见的注释
+- [x] 1.1 清理 `utils/helpers.py` 中所有冗余的docstring和行内注释
+- [x] 1.2 清理 `core/file_state_manager.py` 中简单getter方法的废话注释
+- [x] 1.3 清理 `core/file_watcher.py` 中自解释代码的注释
+- [x] 1.4 清理 `ui/` 模块中显而易见的注释
 
 ## 2. 注释风格统一阶段
-- [ ] 2.1 将所有英文注释统一改为简体中文
+- [x] 2.1 将所有英文注释统一改为简体中文
 - [ ] 2.2 简化冗长的docstring，保留简洁的行内注释
 - [ ] 2.3 统一注释格式和缩进风格
 - [ ] 2.4 删除中英文混杂的注释

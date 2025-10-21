@@ -26,28 +26,6 @@ from core.file_handler import format_size
 
 
 class StatusBar(ctk.CTkFrame):
-    """
-    StatusBar - 常驻状态栏组件
-    
-    职责:
-    - 显示应用统计信息(默认状态)
-    - 显示操作反馈消息(临时状态)
-    - 管理状态切换和定时器
-    - 提供平滑的用户体验
-    
-    使用示例:
-        status_bar = StatusBar(parent)
-        status_bar.grid(row=1, column=0, columnspan=2, sticky='ew')
-        
-        # 更新统计信息
-        status_bar.update_stats(marked=5, total=10, size=1024000, languages=3)
-        
-        # 显示临时消息
-        status_bar.show_message("操作成功", type='success')
-        
-        # 立即恢复默认状态
-        status_bar.show_default()
-    """
     
     def __init__(self, parent):
         """
