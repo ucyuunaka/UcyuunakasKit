@@ -92,7 +92,7 @@ class SimpleDebouncer:
                     self.callback(*args, **kwargs)
         except Exception as e:
             # 防抖器执行失败不应该影响主程序
-            print(f"Debouncer callback error: {e}")
+            print(f"防抖器回调错误: {e}")
     
     def cancel(self) -> bool:
         """

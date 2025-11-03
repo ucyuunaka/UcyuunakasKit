@@ -203,19 +203,16 @@ class FileWatcher:
         logger.debug(f"添加文件到监控: {file_path}")
 
     def add_file(self, file_path: str) -> bool:
-        """添加文件到监控列表"""
         if not self._validate_file_for_monitoring(file_path):
             return False
         
         try:
             file_path = os.path.abspath(file_path)
             dir_path = os.path.dirname(file_path)
-            
-            # 设置目录监控
+
             if not self._setup_directory_monitoring(file_path, dir_path):
                 return False
-            
-            # 添加文件到监控集合
+
             self._add_file_to_monitoring_sets(file_path, dir_path)
             return True
             
@@ -228,20 +225,16 @@ class FileWatcher:
         try:
             file_path = os.path.abspath(file_path)
             dir_path = os.path.dirname(file_path)
-            
-    
+
             self.monitored_files.discard(file_path)
-            
-      
+
             if dir_path in self.monitored_dirs:
                 self.monitored_dirs[dir_path].discard(file_path)
-                
-  
+
                 if not self.monitored_dirs[dir_path]:
                     del self.monitored_dirs[dir_path]
                     logger.info(f"停止监控目录: {dir_path}")
-    
-                    
+
             logger.debug(f"从监控中移除文件: {file_path}")
             return True
             

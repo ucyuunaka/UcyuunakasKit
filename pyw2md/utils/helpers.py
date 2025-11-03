@@ -1,14 +1,10 @@
-"""
-辅助工具函数
-"""
-
 import os
 from typing import Optional
 
 def get_relative_path(file_path: str, base_path: Optional[str] = None) -> str:
     if base_path is None:
         base_path = os.getcwd()
-    
+
     try:
         return os.path.relpath(file_path, base_path)
     except ValueError:

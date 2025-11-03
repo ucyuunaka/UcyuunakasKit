@@ -1,7 +1,3 @@
-"""
-文件状态管理器 - 统一管理所有文件变化状态
-"""
-
 import time
 from typing import Dict, List, Tuple, Set
 from threading import Lock, RLock
@@ -10,37 +6,18 @@ from dataclasses import dataclass
 
 @dataclass
 class FileChange:
-    """文件变化记录"""
     path: str
     change_type: str  # 'modified', 'deleted'
     timestamp: float
 
 
 class FileStateManager:
-    """
-    统一的文件状态管理器
-    
-    负责管理所有文件变化状态，提供线程安全的状态操作接口。
-    取代分散在各个组件中的状态管理，确保状态的一致性和可追踪性。
-    """
-    
     def __init__(self):
-        """初始化文件状态管理器"""
-        self._changes: Dict[str, FileChange] = {}  # path -> FileChange
-        self._lock = RLock()  # 使用可重入锁
+        self._changes: Dict[str, FileChange] = {}
+        self._lock = RLock()
         self._last_cleared_time = 0.0
     
     def add_change(self, path: str, change_type: str) -> bool:
-        """
-        添加文件变化记录
-        
-        Args:
-            path: 文件路径
-            change_type: 变化类型 ('modified' 或 'deleted')
-            
-        Returns:
-            bool: 是否成功添加（如果是重复变化则返回False）
-        """
         with self._lock:
             current_time = time.time()
             
@@ -57,12 +34,6 @@ class FileStateManager:
             return True
     
     def get_and_clear_changes(self) -> List[FileChange]:
-        """
-        获取并清除所有待处理的变化
-        
-        Returns:
-            List[FileChange]: 变化记录列表
-        """
         with self._lock:
             changes = list(self._changes.values())
             self._changes.clear()
@@ -70,12 +41,6 @@ class FileStateManager:
             return changes
     
     def get_changes(self) -> List[FileChange]:
-        """
-        获取当前所有待处理的变化（不清除）
-        
-        Returns:
-            List[FileChange]: 变化记录列表
-        """
         with self._lock:
             return list(self._changes.values())
     
@@ -88,29 +53,11 @@ class FileStateManager:
             return len(self._changes)
     
     def get_changes_by_type(self, change_type: str) -> List[FileChange]:
-        """
-        获取指定类型的变化
-        
-        Args:
-            change_type: 变化类型 ('modified' 或 'deleted')
-            
-        Returns:
-            List[FileChange]: 指定类型的变化记录列表
-        """
         with self._lock:
             return [change for change in self._changes.values() 
                    if change.change_type == change_type]
     
     def remove_change(self, path: str) -> bool:
-        """
-        移除指定文件的变化记录
-        
-        Args:
-            path: 文件路径
-            
-        Returns:
-            bool: 是否成功移除
-        """
         with self._lock:
             if path in self._changes:
                 del self._changes[path]
@@ -123,15 +70,6 @@ class FileStateManager:
             self._last_cleared_time = time.time()
     
     def get_file_status(self, path: str) -> str:
-        """
-        获取指定文件的状态
-        
-        Args:
-            path: 文件路径
-            
-        Returns:
-            str: 文件状态 ('modified', 'deleted', 'normal')
-        """
         with self._lock:
             if path in self._changes:
                 return self._changes[path].change_type
@@ -142,12 +80,6 @@ class FileStateManager:
             return self._last_cleared_time
     
     def cleanup_old_changes(self, max_age_seconds: float = 300.0):
-        """
-        清理过期的变化记录
-        
-        Args:
-            max_age_seconds: 最大保留时间（秒），默认5分钟
-        """
         with self._lock:
             current_time = time.time()
             expired_paths = []

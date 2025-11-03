@@ -1,7 +1,3 @@
-"""
-文件列表面板组件 - 性能优化版本
-"""
-
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import filedialog, ttk
@@ -16,7 +12,6 @@ from utils.dpi_helper import DPIHelper
 from config.settings import Settings
 
 class FileListPanel(Card):
-    """文件列表面板"""
     
     def __init__(self, master, file_handler: FileHandler, **kwargs):
         super().__init__(master, **kwargs)
@@ -35,26 +30,16 @@ class FileListPanel(Card):
         self._build_ui()
     
     def _build_ui(self):
-        """构建UI"""
-        # 主容器
         container = ctk.CTkFrame(self, fg_color='transparent')
         container.pack(fill='both', expand=True, padx=MD.PAD_M, pady=MD.PAD_M)
-        
-        # 标题栏
+
         self._build_header(container)
-        
-        # 搜索和筛选栏
         self._build_search_bar(container)
-        
-        # 操作按钮栏
         self._build_action_bar(container)
-        
-        # 文件列表（树状视图）
         self._build_file_list(container)
         
     
     def _build_header(self, parent):
-        """构建标题栏"""
         header = ctk.CTkFrame(parent, fg_color='transparent')
         header.pack(fill='x', pady=(0, MD.PAD_M))
         
@@ -213,50 +198,30 @@ class FileListPanel(Card):
         ).pack(side='left')
     
     def _build_file_list(self, parent):
-        """构建文件列表（树状视图）- 性能优化版"""
+        list_container = self._create_list_container(parent)
+        style = self._create_treeview_style()
+        tree_view = self._create_treeview(list_container, style)
+        self._setup_scrollbars(list_container, tree_view)
+        self._setup_tree_events(tree_view)
 
-        # ========== 调试代码开始 ==========
-        import tkinter as tk
-        scaling_factor = DPIHelper.get_scaling_factor()
-        font_config = MD.get_font_ui(scaling_factor)
-        
-        print("=" * 60)
-        print("DPI诊断信息")
-        print("=" * 60)
-        print(f"系统DPI: {DPIHelper.get_system_dpi()}")
-        print(f"缩放因子: {scaling_factor}")
-        print(f"字体配置: {font_config}")
-        print(f"基础行高: 18")
-        print(f"计算后行高: {DPIHelper.scale_value(18, scaling_factor)}")
-        print(f"字体高度: {font_config[1]}")
-        print(f"最小行高: {int(font_config[1] * 1.5)}")
-        
-        # 测试tkinter实际如��渲染字体
-        test_font = tk.font.Font(family=font_config[0], size=font_config[1])
-        actual_height = test_font.metrics('linespace')
-        print(f"Tkinter实际字体行高: {actual_height} 像素")
-        print("=" * 60)
+        self.item_to_path = {}
+        self.path_to_item = {}
 
-        # 列表容器
+    def _create_list_container(self, parent):
         list_container = ctk.CTkFrame(parent, fg_color=MD.SURFACE)
         list_container.pack(fill='both', expand=True, pady=(0, MD.PAD_M))
+        return list_container
 
-        # 创建样式
+    def _create_treeview_style(self):
         style = ttk.Style()
         style.theme_use('clam')
 
-        # 根据DPI缩放因子计算合适的行高
         scaling_factor = DPIHelper.get_scaling_factor()
-
-        # 获取实际字体行高（关键修复）
         font_config = MD.get_font_ui(scaling_factor)
         ui_font = tk.font.Font(family=font_config[0], size=font_config[1])
         actual_line_height = ui_font.metrics('linespace')
-
-        # 计算最终行高（实际行高 + 20%间距）
         final_rowheight = int(actual_line_height * 1.2)
 
-        # 配置 Treeview 样式
         style.configure(
             "Compact.Treeview",
             background=MD.BG_SURFACE,
@@ -266,7 +231,7 @@ class FileListPanel(Card):
             font=MD.get_font_ui(scaling_factor),
             rowheight=final_rowheight
         )
-        
+
         style.configure(
             "Compact.Treeview.Heading",
             background=MD.BG_ELEVATED,
@@ -282,51 +247,48 @@ class FileListPanel(Card):
             foreground=[('selected', MD.TEXT_PRIMARY)]
         )
 
-        # 创建 Treeview
+        return style
+
+    def _create_treeview(self, parent, style):
         columns = ('status', 'language', 'size')
         self.file_tree = ttk.Treeview(
-            list_container,
+            parent,
             columns=columns,
             show='tree headings',
             style="Compact.Treeview",
             selectmode='browse'
         )
-        
-        # 配置列 - 启用所有列的宽度调整功能
+
+        self._configure_columns()
+        self._setup_layout(parent)
+        return self.file_tree
+
+    def _configure_columns(self):
         column_widths = self.settings.get('column_widths', {})
         self.file_tree.column('#0', width=column_widths.get('path', 400), minwidth=180, stretch=True)
         self.file_tree.column('status', width=column_widths.get('status', 50), minwidth=50, anchor='center', stretch=True)
         self.file_tree.column('language', width=column_widths.get('language', 80), minwidth=70, anchor='center', stretch=True)
         self.file_tree.column('size', width=column_widths.get('size', 70), minwidth=70, anchor='e', stretch=True)
 
-        # 设置列标题
         self.file_tree.heading('#0', text='[+] 文件路径', anchor='w')
         self.file_tree.heading('status', text='状态', anchor='center')
         self.file_tree.heading('language', text='语言', anchor='center')
         self.file_tree.heading('size', text='大小', anchor='e')
-        
-        # 滚动条
-        vertical_scrollbar = ttk.Scrollbar(list_container, orient="vertical", command=self.file_tree.yview)
-        self.file_tree.configure(yscrollcommand=vertical_scrollbar.set)
 
-        # 布局
-        self.file_tree.grid(row=0, column=0, sticky='nsew')
+    def _setup_scrollbars(self, parent, tree_view):
+        vertical_scrollbar = ttk.Scrollbar(parent, orient="vertical", command=tree_view.yview)
+        tree_view.configure(yscrollcommand=vertical_scrollbar.set)
         vertical_scrollbar.grid(row=0, column=1, sticky='ns')
-        
-        list_container.grid_rowconfigure(0, weight=1)
-        list_container.grid_columnconfigure(0, weight=1)
-        
-        # 绑定事件
-        self.file_tree.bind('<Double-Button-1>', self._on_item_double_click)
-        self.file_tree.bind('<space>', self._on_space_press)
-        self.file_tree.bind('<Button-1>', self._on_item_click)
 
-        # 绑定列宽调整事件
-        self.file_tree.bind('<ButtonRelease-1>', self._on_column_resize)
-        
-        # 存储节点映射
-        self.item_to_path = {}
-        self.path_to_item = {}
+    def _setup_layout(self, parent):
+        parent.grid_rowconfigure(0, weight=1)
+        parent.grid_columnconfigure(0, weight=1)
+
+    def _setup_tree_events(self, tree_view):
+        tree_view.bind('<Double-Button-1>', self._on_item_double_click)
+        tree_view.bind('<space>', self._on_space_press)
+        tree_view.bind('<Button-1>', self._on_item_click)
+        tree_view.bind('<ButtonRelease-1>', self._on_column_resize)
     
     
     # 事件处理

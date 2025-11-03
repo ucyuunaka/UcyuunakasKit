@@ -118,21 +118,6 @@ claude
 specify check
 ```
 
-## ⚠️ Windows 特别提示
-
-1. **PowerShell 执行策略**：如果遇到脚本执行问题，可能需要调整执行策略：
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
-
-2. **路径问题**：Windows 使用反斜杠 `\`，但在命令中通常可以使用正斜杠 `/`
-
-3. **Git 配置**：确保 Git 已正确配置用户信息：
-```powershell
-git config --global user.name "Your Name"
-git config --global user.email "your.email@example.com"
-```
-
 ## 📚 项目结构
 
 初始化后你的项目会是这样的：
