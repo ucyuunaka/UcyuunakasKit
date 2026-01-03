@@ -92,7 +92,7 @@ class FileWatcher:
     def _default_error_callback(self, error_message: str, error_type: str, exception: Optional[Exception] = None):
         logger.error(f"文件监控错误 [{error_type}]: {error_message}")
         # 这里可以替换为用户可见的消息显示
-        print(f"文件监控错误: {error_message}")
+        # print(f"文件监控错误: {error_message}")
     
     def _handle_error_safely(self, error_message: str, error_type: str, exception: Optional[Exception] = None):
         self.error_count += 1
@@ -157,7 +157,7 @@ class FileWatcher:
             return False
     
     def _validate_file_for_monitoring(self, file_path: str) -> bool:
-        print(f"[DEBUG] 验证文件监控: {file_path}")
+        logger.debug(f"验证文件监控: {file_path}")
         if not self.is_monitoring_enabled:
             self._handle_error_safely(f"无法添加文件监控 {file_path}，监控功能已被禁用", "monitoring_disabled")
             return False
@@ -167,7 +167,7 @@ class FileWatcher:
             self._handle_error_safely(error_msg, "file_not_found")
             return False
         
-        print(f"[DEBUG] 文件验证通过: {file_path}")
+        logger.debug(f"文件验证通过: {file_path}")
         return True
     
     def _setup_directory_monitoring(self, file_path: str, dir_path: str) -> bool:

@@ -4,12 +4,16 @@
 
 import threading
 import time
+import logging
 from typing import Callable, Optional, Any
 from weakref import WeakMethod
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.constants import DEFAULT_DEBOUNCE_MS
+
+logger = logging.getLogger(__name__)
+
 
 
 class SimpleDebouncer:
@@ -92,7 +96,7 @@ class SimpleDebouncer:
                     self.callback(*args, **kwargs)
         except Exception as e:
             # 防抖器执行失败不应该影响主程序
-            print(f"防抖器回调错误: {e}")
+            logger.error(f"防抖器回调错误: {e}")
     
     def cancel(self) -> bool:
         """

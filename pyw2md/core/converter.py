@@ -30,10 +30,13 @@ Markdown 转换核心模块 - 性能优化版
 
 import os
 import time
+import logging
 from typing import Callable, Optional
 from io import StringIO
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from core.file_handler import FileInfo
+
+logger = logging.getLogger(__name__)
 
 # Markdown 模板定义
 
@@ -230,7 +233,7 @@ class Converter:
 
     def _setup_parallel_conversion(self, files: list[FileInfo]) -> dict:
         """设置并行转换任务"""
-        print(f"[DEBUG] 设置并行转换任务，文件数量: {len(files)}")
+        logger.debug(f"设置并行转换任务，文件数量: {len(files)}")
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             return {
                 executor.submit(self.convert_file, file_info): (i, file_info)
@@ -239,7 +242,7 @@ class Converter:
     
     def _collect_conversion_results(self, future_to_file: dict, total: int) -> tuple[int, list, dict]:
         """收集转换结果"""
-        print(f"[DEBUG] 收集转换结果，总任务数: {total}")
+        logger.debug(f"收集转换结果，总任务数: {total}")
         success = 0
         errors = []
         results = {}
@@ -251,16 +254,16 @@ class Converter:
                 markdown = future.result()
                 results[i] = markdown
                 success += 1
-                print(f"[DEBUG] 文件转换成功: {file_info.path}")
+                logger.debug(f"文件转换成功: {file_info.path}")
             except Exception as e:
                 errors.append({
                     'file': file_info.path,
                     'error': str(e)
                 })
                 results[i] = f"<!-- ❌ 错误: {str(e)} -->\n\n"
-                print(f"[DEBUG] 文件转换失败: {file_info.path}, 错误: {str(e)}")
+                logger.debug(f"文件转换失败: {file_info.path}, 错误: {str(e)}")
         
-        print(f"[DEBUG] 转换完成，成功: {success}, 失败: {len(errors)}")
+        logger.debug(f"转换完成，成功: {success}, 失败: {len(errors)}")
         return success, errors, results
     
     def _write_buffered_results(self, f, results: dict, total: int, files: list[FileInfo], progress_callback):

@@ -5,10 +5,13 @@
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
 import os
+import logging
 from core.constants import (
     MSG_FILE_MODIFIED, MSG_FILE_DELETED, MSG_REFRESH_COMPLETE,
     MSG_NO_CHANGES, MSG_REFRESH_FAILED, UI_UPDATE_DEBOUNCE_MS
 )
+
+logger = logging.getLogger(__name__)
 
 # 拖放功能安全降级导入
 try:
@@ -22,11 +25,11 @@ try:
     if DRAG_DROP_AVAILABLE:
         from tkinterdnd2 import DND_FILES, TkinterDnD
     else:
-        print(f"tkinterdnd2导入失败: {import_error}")
-        print("提示: 安装 tkinterdnd2 以启用拖放功能: pip install tkinterdnd2")
+        logger.warning(f"tkinterdnd2导入失败: {import_error}")
+        logger.info("提示: 安装 tkinterdnd2 以启用拖放功能: pip install tkinterdnd2")
 except ImportError:
     DRAG_DROP_AVAILABLE = False
-    print("提示: 安装 tkinterdnd2 以启用拖放功能: pip install tkinterdnd2")
+    logger.info("提示: 安装 tkinterdnd2 以启用拖放功能: pip install tkinterdnd2")
 
 from config.theme import MD
 from config.settings import Settings
@@ -236,7 +239,7 @@ class MaterialApp(AppBase):
                 self.configure(fg_color=MD.BG_MAIN)
         except Exception as e:
             # 配置失败时记录日志，不影响应用继续运行
-            print(f"设置背景色失败: {e}")
+            logger.error(f"设置背景色失败: {e}")
 
     def _setup_drag_drop(self):
         """
@@ -259,7 +262,7 @@ class MaterialApp(AppBase):
         """
         if not DRAG_DROP_AVAILABLE:
             # 拖放功能不可用时的降级处理
-            print("拖放功能不可用，已降级为文件选择模式")
+            logger.info("拖放功能不可用，已降级为文件选择模式")
             self._show_drag_drop_hint()
             return
 
@@ -273,10 +276,10 @@ class MaterialApp(AppBase):
                 self.file_panel.drop_target_register(DND_FILES)
                 self.file_panel.dnd_bind('<<Drop>>', self._on_drop)
 
-            print("拖放功能已启用")
+            logger.info("拖放功能已启用")
         except Exception as e:
             # 拖放初始化失败的处理
-            print(f"警告: 拖放功能初始化失败: {e}")
+            logger.warning(f"警告: 拖放功能初始化失败: {e}")
 
     def _show_drag_drop_hint(self):
         """
@@ -441,10 +444,15 @@ class MaterialApp(AppBase):
     
     def _on_file_changed(self, event_type: str, file_path: str):
         # 使用状态栏显示文件变化消息，替代复杂的通知栏
+        # 注意：此回调在后台线程执行，必须使用after调度到主线程更新UI
         if event_type == 'modified':
-            self.status_bar.show_message(MSG_FILE_MODIFIED.format(filename=os.path.basename(file_path)), 3000)
+            self.after(0, lambda: self.status_bar.show_message(
+                MSG_FILE_MODIFIED.format(filename=os.path.basename(file_path)), 3000
+            ))
         elif event_type == 'deleted':
-            self.status_bar.show_message(MSG_FILE_DELETED.format(filename=os.path.basename(file_path)), 3000)
+            self.after(0, lambda: self.status_bar.show_message(
+                MSG_FILE_DELETED.format(filename=os.path.basename(file_path)), 3000
+            ))
 
     def _refresh_changed_files(self):
         try:
