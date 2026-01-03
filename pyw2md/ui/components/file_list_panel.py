@@ -22,7 +22,6 @@ class FileListPanel(Card):
         self._refresh_pending = False
         self._loading = False
         self._loading_animation_id = None
-        self._update_lock = False  # 添加更新锁
 
         # 初始化配置管理器
         self.settings = Settings()
@@ -579,13 +578,7 @@ class FileListPanel(Card):
                 self.path_to_item[file_info.path] = file_item
     
     def _display_files(self, files):
-        """显示文件列表 - 性能优化版（消除撕裂）"""
-        # 防止重复更新
-        if self._update_lock:
-            return
-        
-        self._update_lock = True
-        
+        """显示文件列表"""
         try:
             # 1. 暂停UI更新
             self.file_tree.configure(selectmode='none')
@@ -615,13 +608,8 @@ class FileListPanel(Card):
             self.file_tree.update_idletasks()
             
         finally:
-            # 5. 延迟恢复选择模式，确保UI完全更新
-            self.after(10, self._restore_tree_state)
-    
-    def _restore_tree_state(self):
-        """恢复树状态"""
-        self.file_tree.configure(selectmode='browse')
-        self._update_lock = False
+            # 5. 恢复选择模式
+            self.file_tree.configure(selectmode='browse')
     
     def _animate_loading(self):
         """加载动画"""
