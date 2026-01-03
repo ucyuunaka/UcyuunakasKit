@@ -312,6 +312,11 @@ class FileListPanel(Card):
     def _on_files_added(self, count):
         """文件添加完成回调"""
         self._show_loading(False)
+        
+        # 重置筛选条件，确保新添加的文件能显示
+        self.search_var.set("")
+        self.language_var.set("全部语言")
+        
         self.refresh()
 
         # 调用文件添加回调，传递新添加的文件路径
@@ -338,6 +343,11 @@ class FileListPanel(Card):
     def _on_folder_added(self, count):
         """文件夹添加完成回调"""
         self._show_loading(False)
+        
+        # 重置筛选条件，确保新添加的文件能显示
+        self.search_var.set("")
+        self.language_var.set("全部语言")
+        
         self.refresh()
 
         # 调用文件添加回调，传递新添加的文件路径
