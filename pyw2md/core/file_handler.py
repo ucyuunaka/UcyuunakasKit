@@ -218,8 +218,11 @@ class FileHandler:
         if not os.path.isdir(folder_path):
             return 0
         
-        files = scan_folder(folder_path, recursive)
-        return self.add_files(files)
+        count = 0
+        for file_path in scan_folder(folder_path, recursive):
+            if self.add_file(file_path):
+                count += 1
+        return count
     
     def remove_file(self, path: str) -> bool:
         for i, file in enumerate(self.files):
@@ -320,9 +323,9 @@ def get_language(file_path: str) -> str:
 def get_all_languages() -> List[str]:
     return sorted(LANGUAGE_EXTENSIONS.keys())
 
-def scan_folder(folder_path: str, recursive: bool = True) -> List[str]:
-    supported_files = []
-    all_extensions = [ext for exts in LANGUAGE_EXTENSIONS.values() for ext in exts]
+def scan_folder(folder_path: str, recursive: bool = True):
+    """扫描文件夹获取支持的文件（生成器）"""
+    all_extensions = {ext for exts in LANGUAGE_EXTENSIONS.values() for ext in exts}
     
     if recursive:
         for root, _, files in os.walk(folder_path):
@@ -330,16 +333,14 @@ def scan_folder(folder_path: str, recursive: bool = True) -> List[str]:
                 file_path = os.path.join(root, file)
                 _, ext = os.path.splitext(file_path.lower())
                 if ext in all_extensions:
-                    supported_files.append(file_path)
+                    yield file_path
     else:
         for file in os.listdir(folder_path):
             file_path = os.path.join(folder_path, file)
             if os.path.isfile(file_path):
                 _, ext = os.path.splitext(file_path.lower())
                 if ext in all_extensions:
-                    supported_files.append(file_path)
-    
-    return supported_files
+                    yield file_path
 
 def format_size(size_bytes: int) -> str:
     if size_bytes < 1024:

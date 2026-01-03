@@ -231,80 +231,17 @@ class Converter:
             # 转换失败时返回错误注释，不影响整体转换流程
             return f"<!-- ❌ 错误: 无法处理文件 {file_info.path}: {str(e)} -->\n\n"
 
-    def _setup_parallel_conversion(self, files: list[FileInfo]) -> dict:
-        """设置并行转换任务"""
-        logger.debug(f"设置并行转换任务，文件数量: {len(files)}")
-        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            return {
-                executor.submit(self.convert_file, file_info): (i, file_info)
-                for i, file_info in enumerate(files, 1)
-            }
-    
-    def _collect_conversion_results(self, future_to_file: dict, total: int) -> tuple[int, list, dict]:
-        """收集转换结果"""
-        logger.debug(f"收集转换结果，总任务数: {total}")
-        success = 0
-        errors = []
-        results = {}
-        
-        for future in as_completed(future_to_file):
-            i, file_info = future_to_file[future]
-            
-            try:
-                markdown = future.result()
-                results[i] = markdown
-                success += 1
-                logger.debug(f"文件转换成功: {file_info.path}")
-            except Exception as e:
-                errors.append({
-                    'file': file_info.path,
-                    'error': str(e)
-                })
-                results[i] = f"<!-- ❌ 错误: {str(e)} -->\n\n"
-                logger.debug(f"文件转换失败: {file_info.path}, 错误: {str(e)}")
-        
-        logger.debug(f"转换完成，成功: {success}, 失败: {len(errors)}")
-        return success, errors, results
-    
-    def _write_buffered_results(self, f, results: dict, total: int, files: list[FileInfo], progress_callback):
-        """写入缓冲结果"""
-        buffer = StringIO()
-        buffer_count = 0
-        
-        for i in range(1, total + 1):
-            if i in results:
-                # 回调进度
-                if progress_callback:
-                    progress_callback(i, total, files[i-1].name)
-                
-                # 写入缓冲区
-                buffer.write(results[i])
-                buffer_count += 1
-                
-                # 批量写入磁盘
-                if buffer_count >= self.chunk_size:
-                    f.write(buffer.getvalue())
-                    buffer.close()
-                    buffer = StringIO()
-                    buffer_count = 0
-        
-        # 写入剩余缓冲区
-        if buffer_count > 0:
-            f.write(buffer.getvalue())
-            buffer.close()
-
     def convert_files(self,
                      files: list[FileInfo],
                      output_path: str,
                      progress_callback: Optional[Callable[[int, int, str], None]] = None) -> dict:
         """
-        批量转换文件 - 性能优化版
+        批量转换文件 - 内存优化版
         
         核心优化策略：
         1. 线程池并行处理：使用ThreadPoolExecutor并行读取和转换文件
-        2. StringIO缓冲区：避免频繁的字符串拼接操作
-        3. 批量磁盘写入：每50个文件批量写入一次，减少I/O操作
-        4. 异常隔离：单个文件失败不影响整体转换流程
+        2. 增量写入：转换完成且顺序正确时立即写入磁盘，避免内存积压
+        3. 异常隔离：单个文件失败不影响整体转换流程
         
         参数说明：
         - files: 待转换的文件信息列表
@@ -319,37 +256,74 @@ class Converter:
         - errors: 错误信息列表
         """
         total = len(files)
+        success_count = 0
+        errors = []
+        
+        # 缓冲区，用于存储已完成但尚未轮到写入的文件内容
+        # key: index (0-based), value: markdown content
+        pending_results = {}
+        next_write_index = 0
         
         try:
             with open(output_path, 'w', encoding='utf-8', buffering=8192*16) as f:
                 # 写入文档头部
                 f.write(self._generate_header(files))
                 
-                # 设置并行转换任务
-                future_to_file = self._setup_parallel_conversion(files)
-                
-                # 收集转换结果
-                success, errors, results = self._collect_conversion_results(future_to_file, total)
-                
-                # 写入缓冲结果
-                self._write_buffered_results(f, results, total, files, progress_callback)
+                with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+                    # 提交所有任务
+                    # future -> index mapping
+                    future_to_index = {
+                        executor.submit(self.convert_file, file_info): i
+                        for i, file_info in enumerate(files)
+                    }
+                    
+                    # 处理完成的任务
+                    for future in as_completed(future_to_index):
+                        index = future_to_index[future]
+                        file_info = files[index]
+                        
+                        try:
+                            markdown = future.result()
+                            success_count += 1
+                            logger.debug(f"文件转换成功: {file_info.path}")
+                        except Exception as e:
+                            markdown = f"<!-- ❌ 错误: {str(e)} -->\n\n"
+                            errors.append({
+                                'file': file_info.path,
+                                'error': str(e)
+                            })
+                            logger.debug(f"文件转换失败: {file_info.path}, 错误: {str(e)}")
+                        
+                        # 存入缓冲区
+                        pending_results[index] = markdown
+                        
+                        # 尝试写入缓冲区中已就绪的内容
+                        while next_write_index in pending_results:
+                            content = pending_results.pop(next_write_index)
+                            
+                            # 回调进度 (使用 next_write_index + 1 作为当前进度)
+                            if progress_callback:
+                                progress_callback(next_write_index + 1, total, files[next_write_index].name)
+                            
+                            f.write(content)
+                            next_write_index += 1
                 
                 # 写入文档尾部
-                f.write(self._generate_footer(success, total))
+                f.write(self._generate_footer(success_count, total))
                 
         except Exception as e:
             return {
                 'success': False,
                 'message': f'写入输出文件失败: {str(e)}',
-                'converted': 0,
+                'converted': success_count,
                 'total': total,
                 'errors': errors
             }
         
         return {
             'success': True,
-            'message': f'成功转换 {success}/{total} 个文件',
-            'converted': success,
+            'message': f'成功转换 {success_count}/{total} 个文件',
+            'converted': success_count,
             'total': total,
             'errors': errors
         }

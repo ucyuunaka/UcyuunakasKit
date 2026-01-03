@@ -117,13 +117,18 @@ class FileWatcher:
             return True
         
         try:
-            self.file_change_handler = FileChangeHandler(
-                self.file_state_manager, 
-                self.file_change_callback, 
-                self.monitored_files,
-                self.error_callback
-            )
-            self.observer.start()
+            if self.file_change_handler is None:
+                self.file_change_handler = FileChangeHandler(
+                    self.file_state_manager, 
+                    self.file_change_callback, 
+                    self.monitored_files,
+                    self.error_callback
+                )
+            
+            # 检查observer是否已经启动
+            if not self.observer.is_alive():
+                self.observer.start()
+            
             self.is_monitoring_active = True
             logger.info("文件监控器启动成功")
             return True
