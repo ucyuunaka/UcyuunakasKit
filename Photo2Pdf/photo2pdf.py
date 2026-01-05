@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 图像转PDF工具
 支持将PNG、JPG、JPEG、BMP、TIFF等格式的图像文件转换为PDF格式

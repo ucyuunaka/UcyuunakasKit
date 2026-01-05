@@ -257,6 +257,7 @@ class FileListPanel(Card):
             style="Compact.Treeview",
             selectmode='browse'
         )
+        self.file_tree.grid(row=0, column=0, sticky='nsew')
 
         self._configure_columns()
         self._setup_layout(parent)
